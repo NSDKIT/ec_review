@@ -67,8 +67,11 @@ class RakutenReviewAnalyzer {
             
             if (itemUrl && itemUrl.trim() !== '') {
                 // itemUrl から ratItemId を抽出
-                if (progressCallback) progressCallback(10, '商品ページから商品IDを抽出中...');
+                if (progressCallback) progressCallback(10, '📄 商品ページから商品IDを抽出中...');
                 itemId = await this.extractItemId(itemUrl, progressCallback);
+                if (progressCallback && itemId) {
+                    progressCallback(20, `✅ 商品ID抽出完了: ${itemId}`);
+                }
             }
             
             if (!itemId) {
@@ -84,8 +87,11 @@ class RakutenReviewAnalyzer {
             itemId = itemId.replace(/\//g, '_');
 
             // レビューデータを取得
-            if (progressCallback) progressCallback(30, 'レビューページを取得中...');
+            if (progressCallback) progressCallback(30, '📖 レビューページを取得開始...');
             const allReviews = await this.fetchAllReviews(itemId, progressCallback);
+            if (progressCallback) {
+                progressCallback(85, `✅ レビュー取得完了: 合計${allReviews.length}件のレビューを取得`);
+            }
             
             if (allReviews.length === 0) {
                 return this.getEmptyResult('レビューはありませんでした。');
@@ -147,8 +153,14 @@ class RakutenReviewAnalyzer {
                     // Google Apps Scriptを使用
                     proxyUrl = `${this.gasProxyUrl}?url=${encodeURIComponent(itemUrl)}&ratItemIdOnly=false`;
                     useGas = true;
+                    if (progressCallback && attempt === 0) {
+                        progressCallback(5, '🌐 商品ページを取得中 (GAS経由)...');
+                    }
                     console.log('🔧 Google Apps Scriptを使用して商品ページを取得');
                 } else {
+                    if (progressCallback && attempt === 0) {
+                        progressCallback(5, '🌐 商品ページを取得中 (Vercel Functions経由)...');
+                    }
                     // Vercel Functionsを使用（フォールバック）
                     proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(itemUrl)}`;
                     console.log('🔧 Vercel Functionsを使用して商品ページを取得');
@@ -156,6 +168,9 @@ class RakutenReviewAnalyzer {
                 
                 if (attempt > 0) {
                     console.log(`🔄 リトライ ${attempt}/${maxRetries}:`, itemUrl);
+                    if (progressCallback) {
+                        progressCallback(5, `🔄 商品ページ取得リトライ中 (${attempt}/${maxRetries})...`);
+                    }
                     // リトライ前に少し待機
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                 } else {
@@ -220,6 +235,9 @@ class RakutenReviewAnalyzer {
                         }
                         
                         if (contentType.includes('application/json')) {
+                            if (progressCallback) {
+                                progressCallback(7, '📥 商品ページHTMLを取得完了、解析中...');
+                            }
                             const jsonData = await response.json();
                             console.log('📄 Google Apps Scriptからのレスポンス（JSON）:', jsonData);
                             
@@ -235,6 +253,10 @@ class RakutenReviewAnalyzer {
                             console.log('📄 Google Apps Scriptからのレスポンス:');
                             console.log('HTML長:', html ? html.length : 0, '文字');
                             console.log('抽出されたratItemId:', extractedRatItemId);
+                            
+                            if (progressCallback && extractedRatItemId) {
+                                progressCallback(8, `✅ 商品ID抽出成功: ${extractedRatItemId}`);
+                            }
                             console.log('htmlLength:', jsonData.htmlLength);
                             
                             if (!html && extractedRatItemId) {
@@ -304,6 +326,9 @@ class RakutenReviewAnalyzer {
                     // GASで既にratItemIdが抽出されている場合はそれを使用
                     if (extractedRatItemId) {
                         console.log('✅ 商品ID抽出成功（GAS経由）:', extractedRatItemId);
+                        if (progressCallback) {
+                            progressCallback(10, `✅ 商品ID抽出成功: ${extractedRatItemId}`);
+                        }
                         return extractedRatItemId;
                     }
                     
@@ -317,12 +342,18 @@ class RakutenReviewAnalyzer {
                     }
                     
                     if (jsonMatch) {
+                        if (progressCallback) {
+                            progressCallback(8, '🔍 JSONデータから商品IDを抽出中...');
+                        }
                         try {
                             const jsonData = JSON.parse(jsonMatch[1]);
                             // rat.genericParameter.ratItemId から取得
                             if (jsonData.rat && jsonData.rat.genericParameter && jsonData.rat.genericParameter.ratItemId) {
                                 const itemId = jsonData.rat.genericParameter.ratItemId.replace(/\//g, '_');
                                 console.log('✅ JSONデータ（rat.genericParameter.ratItemId）から商品ID抽出成功:', itemId);
+                                if (progressCallback) {
+                                    progressCallback(10, `✅ 商品ID抽出成功: ${itemId}`);
+                                }
                                 return itemId;
                             }
                             // api.data.itemInfoSku から shopId と itemId を取得して構築
@@ -332,6 +363,9 @@ class RakutenReviewAnalyzer {
                                 if (shopId && itemId) {
                                     const ratItemId = `${shopId}_${itemId}`;
                                     console.log('✅ JSONデータ（shopId/itemId）から商品ID抽出成功:', ratItemId);
+                                    if (progressCallback) {
+                                        progressCallback(10, `✅ 商品ID抽出成功: ${ratItemId}`);
+                                    }
                                     return ratItemId;
                                 }
                             }
@@ -341,15 +375,24 @@ class RakutenReviewAnalyzer {
                     }
                     
                     // 方法2: HTML内の ratItemId を正規表現で抽出（従来の方法）
+                    if (progressCallback) {
+                        progressCallback(9, '🔍 正規表現で商品IDを抽出中...');
+                    }
             const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
             
             if (match && match[1]) {
                 const itemId = match[1].replace(/\//g, '_');
                         console.log('✅ 正規表現で商品ID抽出成功:', itemId);
+                if (progressCallback) {
+                    progressCallback(10, `✅ 商品ID抽出成功: ${itemId}`);
+                }
                 return itemId;
             }
 
             console.warn('商品IDが見つからず、フォールバック使用');
+            if (progressCallback) {
+                progressCallback(10, '⚠️ 商品IDが見つからず、フォールバック使用');
+            }
             return this.extractItemIdFromUrl(itemUrl);
 
                 } catch (fetchError) {
@@ -447,7 +490,7 @@ class RakutenReviewAnalyzer {
                         if (progressCallback) {
                             progressCallback(
                                 30 + Math.floor((pageNum / this.maxPages) * 60),
-                                `レビューページ取得リトライ中: ページ${pageNum} (${attempt}/${maxRetries})`
+                                `🔄 レビューページ取得リトライ中: ページ${pageNum} (${attempt}/${maxRetries})`
                             );
                         }
                         // リトライ前に少し待機
@@ -457,7 +500,7 @@ class RakutenReviewAnalyzer {
                         if (progressCallback) {
                             progressCallback(
                                 30 + Math.floor((pageNum / this.maxPages) * 60),
-                                `レビューページ取得中: ページ${pageNum} (${allReviews.length}件のレビューを取得済み)`
+                                `📄 レビューページ取得中: ページ${pageNum} (現在${allReviews.length}件取得済み)`
                             );
                         }
                         if (useGas) {
@@ -524,12 +567,19 @@ class RakutenReviewAnalyzer {
                         } else {
                             html = await response.text();
                         }
+                // レビューページを解析
+                if (progressCallback) {
+                    progressCallback(
+                        30 + Math.floor((pageNum / this.maxPages) * 60),
+                        `🔍 レビューページ解析中: ページ${pageNum}`
+                    );
+                }
                 const pageReviews = this.parseReviewPage(html);
 
                 if (pageReviews.length === 0) {
                     console.log(`ページ${pageNum}: レビューなし、終了`);
                     if (progressCallback) {
-                        progressCallback(90, `レビュー解析完了: ${allReviews.length}件のレビューを取得`);
+                        progressCallback(90, `✅ レビュー取得完了: ${allReviews.length}件のレビューを取得（ページ${pageNum}で終了）`);
                     }
                     foundOldReview = true; // ループを終了させる
                     success = true;
@@ -545,7 +595,7 @@ class RakutenReviewAnalyzer {
                         foundOldReview = true;
                         console.log('3ヶ月以前のレビューを発見、取得終了');
                         if (progressCallback) {
-                            progressCallback(90, `3ヶ月以前のレビューを発見、取得終了 (${allReviews.length + pageReviews.length}件取得)`);
+                            progressCallback(90, `✅ 3ヶ月以前のレビューを発見、取得終了 (合計${allReviews.length + pageReviews.length}件取得)`);
                         }
                         break;
                     }
@@ -558,7 +608,7 @@ class RakutenReviewAnalyzer {
                 // 進行状況を更新
                 if (progressCallback) {
                     const progress = 30 + Math.floor((pageNum / this.maxPages) * 60);
-                    progressCallback(progress, `レビュー取得中: ページ${pageNum} (合計${allReviews.length}件)`);
+                    progressCallback(progress, `✅ ページ${pageNum - 1}完了: ${pageReviews.length}件取得 (合計${allReviews.length}件)`);
                 }
 
                 // レート制限を考慮して少し待機

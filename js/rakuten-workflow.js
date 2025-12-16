@@ -163,13 +163,18 @@ class RakutenWorkflow {
                 const productName = product.item_name.length > 30 
                     ? product.item_name.substring(0, 30) + '...' 
                     : product.item_name;
+                
+                // 処理開始を表示
                 if (rakutenUI) {
-                    rakutenUI.updateProgress(progress, `商品データ書き込み中: ${i + 1}/${totalProducts}件 - ${productName}`);
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${totalProducts}] 商品データ処理開始: ${productName}`);
                 }
 
                 // 送料込み価格を取得（必要に応じて）
                 let priceWithShipping = product.item_price;
                 if (product.postage_flag === '送料別') {
+                    if (rakutenUI) {
+                        rakutenUI.updateProgress(progress, `[${i + 1}/${totalProducts}] 送料込み価格を取得中: ${productName}`);
+                    }
                     const detail = await rakutenAPI.getItemDetail(product.item_code);
                     if (detail) {
                         priceWithShipping = detail.item_price;
@@ -195,7 +200,15 @@ class RakutenWorkflow {
                 ];
 
                 // Google Sheetsに書き込み
+                if (rakutenUI) {
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${totalProducts}] Google Sheetsに書き込み中: ${productName}`);
+                }
                 await this.writeRow(i + 2, rowData);
+
+                // 処理完了を表示
+                if (rakutenUI) {
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${totalProducts}] ✅ 商品データ書き込み完了: ${productName}`);
+                }
 
                 // 進捗を表示
                 if ((i + 1) % 10 === 0) {
@@ -207,7 +220,7 @@ class RakutenWorkflow {
                 if (rakutenUI) {
                     rakutenUI.updateProgress(
                         20 + Math.floor((i / totalProducts) * 30),
-                        `商品${i + 1}の処理エラー: ${error.message}`
+                        `[${i + 1}/${totalProducts}] ❌ 処理エラー: ${error.message}`
                     );
                 }
                 // エラーでも続行
@@ -280,8 +293,10 @@ class RakutenWorkflow {
                 const productName = product.item_name.length > 30 
                     ? product.item_name.substring(0, 30) + '...' 
                     : product.item_name;
+                
+                // レビュー分析開始を表示
                 if (rakutenUI) {
-                    rakutenUI.updateProgress(progress, `レビュー分析中: ${i + 1}/${maxReviewAnalysis}件 - ${productName}`);
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${maxReviewAnalysis}] レビュー分析開始: ${productName}`);
                 }
 
                 console.log(`  📊 商品${i + 1}/${maxReviewAnalysis}: ${productName}`);
@@ -294,18 +309,28 @@ class RakutenWorkflow {
                         const subProgressValue = Math.floor((subProgress / 100) * (35 / maxReviewAnalysis));
                         rakutenUI.updateProgress(
                             currentProgress + subProgressValue,
-                            `レビュー分析中: ${i + 1}/${maxReviewAnalysis}件 - ${subMessage}`
+                            `[${i + 1}/${maxReviewAnalysis}] ${subMessage}`
                         );
                     }
                 });
 
                 // Google Sheetsにレビューデータを書き込み
+                if (rakutenUI) {
+                    const progress = 60 + Math.floor((i / maxReviewAnalysis) * 35);
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${maxReviewAnalysis}] レビューデータをGoogle Sheetsに書き込み中: ${productName}`);
+                }
                 await this.writeReviewData(i + 2, reviewData);
 
                 results.push({
                     productName: product.item_name,
                     reviewData: reviewData
                 });
+
+                // 完了を表示
+                if (rakutenUI) {
+                    const progress = 60 + Math.floor(((i + 1) / maxReviewAnalysis) * 35);
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${maxReviewAnalysis}] ✅ レビュー分析完了: ${productName} (直近3ヶ月: ${reviewData.review_count_3months}件)`);
+                }
 
                 // 進捗表示
                 if ((i + 1) % 5 === 0) {
@@ -319,7 +344,7 @@ class RakutenWorkflow {
                 console.error(`商品${i + 1}のレビュー分析エラー:`, error);
                 if (rakutenUI) {
                     const progress = 60 + Math.floor((i / maxReviewAnalysis) * 35);
-                    rakutenUI.updateProgress(progress, `商品${i + 1}のレビュー分析エラー: ${error.message}`);
+                    rakutenUI.updateProgress(progress, `[${i + 1}/${maxReviewAnalysis}] ❌ レビュー分析エラー: ${error.message}`);
                 }
                 // エラーでも続行
             }
