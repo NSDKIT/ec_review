@@ -738,4 +738,5 @@ document.addEventListener('DOMContentLoaded', () => {
 // グローバルに公開
 window.RakutenWorkflowUI = RakutenWorkflowUI;
 window.rakutenWorkflowUI = rakutenWorkflowUI;
+window.rakutenUI = rakutenWorkflowUI; // エイリアス（rakuten-workflow.jsで使用）
 
