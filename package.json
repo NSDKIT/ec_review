@@ -1,0 +1,25 @@
+{
+  "name": "ec-review-site",
+  "version": "3.0.0",
+  "description": "商品調査・分析ダッシュボード with 楽天商品調査ワークフロー",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "keywords": [
+    "rakuten",
+    "ecommerce",
+    "analysis",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+

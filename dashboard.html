@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロジェクト管理 - 商品調査・分析ダッシュボード</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="index.html" class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                            商品調査ダッシュボード
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-1"></i>ホーム
+                    </a>
+                    <a href="dashboard.html" class="text-blue-600 bg-blue-50 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-tachometer-alt mr-1"></i>ダッシュボード
+                    </a>
+                    <button id="user-menu-btn" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-user mr-1"></i><span id="user-name">ユーザー</span>
+                    </button>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-blue-600 p-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Page Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">プロジェクト管理</h1>
+                <p class="mt-1 text-sm text-gray-600">商品調査プロジェクトの作成・管理・分析結果確認</p>
+            </div>
+            <button id="new-project-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>新規プロジェクト
+            </button>
+        </div>
+
+        <!-- Project Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-folder text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">総プロジェクト数</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-projects">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">完了済み</p>
+                        <p class="text-2xl font-bold text-gray-900" id="completed-projects">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">分析中</p>
+                        <p class="text-2xl font-bold text-gray-900" id="analyzing-projects">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-shopping-cart text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">総商品数</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-items">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects List -->
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-900">プロジェクト一覧</h2>
+                <div class="flex space-x-3">
+                    <div class="relative">
+                        <input type="text" id="search-projects" placeholder="プロジェクトを検索..."
+                               class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <select id="filter-status" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">全てのステータス</option>
+                        <option value="created">作成済み</option>
+                        <option value="analyzing">分析中</option>
+                        <option value="completed">完了</option>
+                        <option value="error">エラー</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="projects-loading" class="flex justify-center items-center py-12">
+                <div class="loading-spinner w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                <span class="ml-3 text-gray-600">プロジェクトを読み込み中...</span>
+            </div>
+
+            <!-- Projects Grid -->
+            <div id="projects-grid" class="p-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-container">
+                    <!-- Projects will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="projects-empty" class="text-center py-12 hidden">
+                <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600 mb-4">プロジェクトがありません</p>
+                <button id="empty-new-project-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i>最初のプロジェクトを作成
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">新規プロジェクト作成</h3>
+                    <button id="close-project-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="project-creation-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="modal-project-name" class="block text-sm font-medium text-gray-700 mb-2">プロジェクト名 *</label>
+                            <input type="text" id="modal-project-name" name="name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="例: iPhone ケース市場調査">
+                        </div>
+                        
+                        <div>
+                            <label for="modal-search-keyword" class="block text-sm font-medium text-gray-700 mb-2">検索キーワード *</label>
+                            <input type="text" id="modal-search-keyword" name="search_keyword" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="例: iPhone ケース">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="modal-marketplace" class="block text-sm font-medium text-gray-700 mb-2">マーケットプレイス</label>
+                            <select id="modal-marketplace" name="marketplace" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="both">楽天 + Yahoo!</option>
+                                <option value="rakuten">楽天市場のみ</option>
+                                <option value="yahoo">Yahoo!ショッピングのみ</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="modal-min-price" class="block text-sm font-medium text-gray-700 mb-2">最低価格</label>
+                            <input type="number" id="modal-min-price" name="min_price" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="0">
+                        </div>
+                        
+                        <div>
+                            <label for="modal-max-price" class="block text-sm font-medium text-gray-700 mb-2">最高価格</label>
+                            <input type="number" id="modal-max-price" name="max_price" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="制限なし">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="modal-description" class="block text-sm font-medium text-gray-700 mb-2">プロジェクト説明（任意）</label>
+                        <textarea id="modal-description" name="description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="このプロジェクトの目的や調査したい内容を記入してください"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-project-modal" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button type="submit" id="create-project-submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                            <i class="fas fa-plus mr-1"></i>プロジェクト作成
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dify Chat Button -->
+    <button id="customChatButton" class="custom-chat-button" onclick="openDifyChat()">
+        <i class="fas fa-comments"></i>
+        商品調査・分析開始
+    </button>
+
+    <!-- Dify Chatbot Configuration -->
+    <script>
+        window.difyChatbotConfig = {
+            token: 'KgKt0EHWBvsx9yFV',
+            inputs: {
+                // You can define the inputs from the Start node here
+                // key is the variable name
+                // e.g.
+                // name: "NAME"
+            },
+            systemVariables: {
+                // user_id: 'YOU CAN DEFINE USER ID HERE',
+                // conversation_id: 'YOU CAN DEFINE CONVERSATION ID HERE, IT MUST BE A VALID UUID',
+            },
+            userVariables: {
+                // avatar_url: 'YOU CAN DEFINE USER AVATAR URL HERE',
+                // name: 'YOU CAN DEFINE USER NAME HERE',
+            },
+        }
+    </script>
+    <script
+        src="https://udify.app/embed.min.js"
+        id="KgKt0EHWBvsx9yFV"
+        defer>
+    </script>
+    <style>
+        /* Hide the default bubble button */
+        #dify-chatbot-bubble-button {
+            display: none !important;
+        }
+        /* Full screen chatbot window */
+        #dify-chatbot-bubble-window {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            border-radius: 0 !important;
+            z-index: 10000 !important;
+        }
+        
+        /* Custom centered button */
+        .custom-chat-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1C64F2 0%, #2563EB 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(28, 100, 242, 0.3);
+            transition: all 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .custom-chat-button:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 15px 35px rgba(28, 100, 242, 0.4);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        }
+        
+        .custom-chat-button:active {
+            transform: translateX(-50%) translateY(0px);
+            box-shadow: 0 8px 20px rgba(28, 100, 242, 0.3);
+        }
+        
+        @media (max-width: 640px) {
+            .custom-chat-button {
+                font-size: 14px;
+                padding: 12px 24px;
+                bottom: 20px;
+            }
+        }
+    </style>
+
+    <!-- Custom Chat Button Script -->
+    <script>
+        function openDifyChat() {
+            // Dify chatbot の iframe を開く
+            const chatbotWindow = document.querySelector('#dify-chatbot-bubble-window');
+            if (chatbotWindow) {
+                chatbotWindow.style.display = 'block';
+            } else {
+                // fallback: デフォルトのdify開始方法を試す
+                const event = new Event('click');
+                const bubbleButton = document.querySelector('#dify-chatbot-bubble-button');
+                if (bubbleButton) {
+                    bubbleButton.dispatchEvent(event);
+                }
+                // または直接Difyの関数を呼び出し
+                if (window.difyChatbot && window.difyChatbot.open) {
+                    window.difyChatbot.open();
+                }
+            }
+        }
+        
+        // Difyが読み込まれた後にカスタムボタンを表示
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const customButton = document.getElementById('customChatButton');
+                if (customButton) {
+                    customButton.style.display = 'flex';
+                }
+            }, 1000);
+        });
+    </script>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

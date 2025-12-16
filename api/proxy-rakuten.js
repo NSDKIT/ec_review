@@ -1,0 +1,90 @@
+/**
+ * Vercel Serverless Function
+ * 楽天ページ取得プロキシ（CORS回避用）
+ * 
+ * 注意: 商用利用では、楽天の利用規約を確認してください
+ */
+
+export default async function handler(req, res) {
+  // CORS設定
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // OPTIONSリクエストの処理
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // GETリクエストのみ許可
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { url } = req.query;
+
+    // バリデーション
+    if (!url) {
+      return res.status(400).json({ error: 'URLパラメータが必要です' });
+    }
+
+    // 楽天のドメインのみ許可（セキュリティ対策）
+    const allowedDomains = [
+      'rakuten.co.jp',
+      'item.rakuten.co.jp',
+      'review.rakuten.co.jp'
+    ];
+
+    const urlObj = new URL(url);
+    const isAllowed = allowedDomains.some(domain => urlObj.hostname.endsWith(domain));
+
+    if (!isAllowed) {
+      return res.status(403).json({ 
+        error: '許可されていないドメインです',
+        allowedDomains: allowedDomains
+      });
+    }
+
+    // 楽天のページを取得
+    console.log('🌐 楽天ページ取得:', url);
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+        'Referer': 'https://www.rakuten.co.jp/'
+      },
+      // タイムアウト設定（10秒）
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
+    }
+
+    const html = await response.text();
+
+    // HTMLを返す
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(html);
+
+  } catch (error) {
+    console.error('❌ エラー:', error);
+    
+    // タイムアウトエラーの場合
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      return res.status(504).json({
+        error: 'タイムアウト: サーバーからの応答が遅すぎます',
+        message: error.message
+      });
+    }
+
+    return res.status(500).json({
+      error: 'サーバーエラーが発生しました',
+      message: error.message
+    });
+  }
+}
+

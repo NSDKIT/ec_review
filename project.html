@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロジェクト詳細 - 商品調査・分析ダッシュボード</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button.active {
+            @apply bg-blue-600 text-white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="index.html" class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                            商品調査ダッシュボード
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-1"></i>ホーム
+                    </a>
+                    <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-tachometer-alt mr-1"></i>ダッシュボード
+                    </a>
+                    <button id="user-menu-btn" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-user mr-1"></i><span id="user-name">ユーザー</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">プロジェクトを読み込み中...</p>
+        </div>
+
+        <!-- Project Content -->
+        <div id="project-content" class="hidden space-y-6">
+            
+            <!-- Project Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="mb-4 lg:mb-0">
+                        <div class="flex items-center mb-2">
+                            <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 mr-3">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                            <h1 id="project-title" class="text-2xl font-bold text-gray-900">プロジェクト名</h1>
+                            <span id="project-status" class="ml-3 px-3 py-1 rounded-full text-sm font-medium">ステータス</span>
+                        </div>
+                        <p id="project-description" class="text-gray-600">プロジェクト説明</p>
+                        <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
+                            <span><i class="fas fa-search mr-1"></i><span id="project-keyword">キーワード</span></span>
+                            <span><i class="fas fa-store mr-1"></i><span id="project-marketplace">マーケットプレイス</span></span>
+                            <span><i class="fas fa-calendar mr-1"></i><span id="project-date">作成日</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="analyze-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center">
+                            <i class="fas fa-play mr-2"></i>分析実行
+                        </button>
+                        <button id="export-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center">
+                            <i class="fas fa-download mr-2"></i>レポート出力
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i class="fas fa-shopping-cart text-blue-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-600">商品数</p>
+                            <p id="kpi-total-items" class="text-xl font-bold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <i class="fas fa-yen-sign text-green-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-600">平均価格</p>
+                            <p id="kpi-avg-price" class="text-xl font-bold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-star text-yellow-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-600">平均評価</p>
+                            <p id="kpi-avg-rating" class="text-xl font-bold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-purple-100 rounded-lg">
+                            <i class="fas fa-comments text-purple-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-600">レビュー数</p>
+                            <p id="kpi-review-count" class="text-xl font-bold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="border-b border-gray-200">
+                    <nav class="flex overflow-x-auto">
+                        <button class="tab-button active px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-gray-300" 
+                                data-tab="price-analysis">
+                            <i class="fas fa-chart-bar mr-2"></i>価格分析
+                        </button>
+                        <button class="tab-button px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-gray-300" 
+                                data-tab="review-analysis">
+                            <i class="fas fa-star mr-2"></i>レビュー分析
+                        </button>
+                        <button class="tab-button px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-gray-300" 
+                                data-tab="competitor-analysis">
+                            <i class="fas fa-balance-scale mr-2"></i>競合比較
+                        </button>
+                        <button class="tab-button px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-gray-300" 
+                                data-tab="ai-insights">
+                            <i class="fas fa-brain mr-2"></i>AI示唆
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content: Price Analysis -->
+                <div id="price-analysis" class="tab-content active p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Price Distribution Chart -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">価格分布</h3>
+                            <div class="chart-container">
+                                <canvas id="priceDistributionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Price Statistics -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">価格統計</h3>
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">最低価格</span>
+                                        <span id="stat-min-price" class="text-xl font-bold text-green-600">-</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">最高価格</span>
+                                        <span id="stat-max-price" class="text-xl font-bold text-red-600">-</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">中央値</span>
+                                        <span id="stat-median-price" class="text-xl font-bold text-blue-600">-</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">価格レンジ</span>
+                                        <span id="stat-price-range" class="text-xl font-bold text-gray-900">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Trend Chart -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">価格帯別商品数</h3>
+                        <div class="chart-container">
+                            <canvas id="priceRangeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Review Analysis -->
+                <div id="review-analysis" class="tab-content p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Rating Distribution -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">評価分布</h3>
+                            <div class="chart-container">
+                                <canvas id="ratingDistributionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Sentiment Analysis -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">感情分析</h3>
+                            <div class="chart-container">
+                                <canvas id="sentimentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Keywords -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">頻出キーワード</h3>
+                        <div id="keywords-container" class="flex flex-wrap gap-2">
+                            <!-- Keywords will be dynamically loaded -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Competitor Analysis -->
+                <div id="competitor-analysis" class="tab-content p-6">
+                    <h3 class="text-lg font-semibold mb-4">上位競合商品</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">順位</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">価格</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">評価</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">レビュー数</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ショップ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="competitor-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Competitor data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab Content: AI Insights -->
+                <div id="ai-insights" class="tab-content p-6">
+                    <div class="space-y-6">
+                        <!-- Market Summary -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-3">
+                                <i class="fas fa-lightbulb mr-2"></i>市場分析要約
+                            </h3>
+                            <p id="ai-summary" class="text-blue-800">
+                                分析データを基にAIが市場の状況を要約します...
+                            </p>
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-green-900 mb-3">
+                                <i class="fas fa-arrow-right mr-2"></i>推奨アクション
+                            </h3>
+                            <ul id="ai-recommendations" class="space-y-2 text-green-800">
+                                <li>分析データに基づいた具体的な推奨アクションを表示します...</li>
+                            </ul>
+                        </div>
+
+                        <!-- Key Findings -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-yellow-900 mb-3">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>重要な発見
+                            </h3>
+                            <ul id="ai-key-findings" class="space-y-2 text-yellow-800">
+                                <li>市場調査で発見された重要なポイントを表示します...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Dify Chat Button -->
+    <button id="customChatButton" class="custom-chat-button" onclick="openDifyChat()">
+        <i class="fas fa-comments"></i>
+        商品調査・分析開始
+    </button>
+
+    <!-- Dify Chatbot Configuration -->
+    <script>
+        window.difyChatbotConfig = {
+            token: 'KgKt0EHWBvsx9yFV',
+            inputs: {
+                // You can define the inputs from the Start node here
+                // key is the variable name
+                // e.g.
+                // name: "NAME"
+            },
+            systemVariables: {
+                // user_id: 'YOU CAN DEFINE USER ID HERE',
+                // conversation_id: 'YOU CAN DEFINE CONVERSATION ID HERE, IT MUST BE A VALID UUID',
+            },
+            userVariables: {
+                // avatar_url: 'YOU CAN DEFINE USER AVATAR URL HERE',
+                // name: 'YOU CAN DEFINE USER NAME HERE',
+            },
+        }
+    </script>
+    <script
+        src="https://udify.app/embed.min.js"
+        id="KgKt0EHWBvsx9yFV"
+        defer>
+    </script>
+    <style>
+        /* Hide the default bubble button */
+        #dify-chatbot-bubble-button {
+            display: none !important;
+        }
+        /* Full screen chatbot window */
+        #dify-chatbot-bubble-window {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            border-radius: 0 !important;
+            z-index: 10000 !important;
+        }
+        
+        /* Custom centered button */
+        .custom-chat-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1C64F2 0%, #2563EB 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(28, 100, 242, 0.3);
+            transition: all 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .custom-chat-button:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 15px 35px rgba(28, 100, 242, 0.4);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        }
+        
+        .custom-chat-button:active {
+            transform: translateX(-50%) translateY(0px);
+            box-shadow: 0 8px 20px rgba(28, 100, 242, 0.3);
+        }
+        
+        @media (max-width: 640px) {
+            .custom-chat-button {
+                font-size: 14px;
+                padding: 12px 24px;
+                bottom: 20px;
+            }
+        }
+    </style>
+
+    <!-- Custom Chat Button Script -->
+    <script>
+        function openDifyChat() {
+            // Dify chatbot の iframe を開く
+            const chatbotWindow = document.querySelector('#dify-chatbot-bubble-window');
+            if (chatbotWindow) {
+                chatbotWindow.style.display = 'block';
+            } else {
+                // fallback: デフォルトのdify開始方法を試す
+                const event = new Event('click');
+                const bubbleButton = document.querySelector('#dify-chatbot-bubble-button');
+                if (bubbleButton) {
+                    bubbleButton.dispatchEvent(event);
+                }
+                // または直接Difyの関数を呼び出し
+                if (window.difyChatbot && window.difyChatbot.open) {
+                    window.difyChatbot.open();
+                }
+            }
+        }
+        
+        // Difyが読み込まれた後にカスタムボタンを表示
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const customButton = document.getElementById('customChatButton');
+                if (customButton) {
+                    customButton.style.display = 'flex';
+                }
+            }, 1000);
+        });
+    </script>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/project.js"></script>
+</body>
+</html>

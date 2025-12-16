@@ -1,0 +1,2928 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: 楽天商品調査ツール_v3
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: omluc/google_sheets:0.0.2@17f06eaa1d905595e1a76460e7249707a722142353d551cf14aed3d8517c134f
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables:
+  - description: ''
+    id: af8e98ed-519d-4209-a8db-2de95f462b6c
+    name: postageFlag
+    selector:
+    - conversation
+    - postageFlag
+    value: 1
+    value_type: integer
+  - description: ''
+    id: b18b6e60-ad97-4db4-9c45-6fd9796a1a2d
+    name: hits
+    selector:
+    - conversation
+    - hits
+    value: 30
+    value_type: integer
+  - description: ''
+    id: 0ed5de27-192a-41f6-ab39-fccd33d2636b
+    name: item_name
+    selector:
+    - conversation
+    - item_name
+    value: true
+    value_type: boolean
+  environment_variables:
+  - description: ''
+    id: 748b8f81-5b28-41fa-98a5-2cf022acb2f4
+    name: chunk_size
+    selector:
+    - env
+    - chunk_size
+    value: 5000
+    value_type: integer
+  - description: ''
+    id: 475087f4-cc00-4a6a-a4ee-dd10b5d3f41e
+    name: sheet_id
+    selector:
+    - env
+    - sheet_id
+    value: 1wdH9PXo6cgzG258Dl_L4JmubYtSYe4V3ZruAim6KAOY
+    value_type: secret
+  - description: ''
+    id: 3244ee4b-dfba-4494-b7b6-cdbe16228a47
+    name: app_id
+    selector:
+    - env
+    - app_id
+    value: '1011800059095379100'
+    value_type: secret
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        sourceType: tool
+        targetType: assigner
+      id: 1757283927791-source-1757051714252-target
+      selected: false
+      source: '1757283927791'
+      sourceHandle: source
+      target: '1757051714252'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: code
+      id: 1756959299516-source-1757287868179-target
+      selected: false
+      source: '1756959299516'
+      sourceHandle: source
+      target: '1757287868179'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: tool
+      id: 1757287868179-source-1757287844330-target
+      selected: false
+      source: '1757287868179'
+      sourceHandle: source
+      target: '1757287844330'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: loop
+        targetType: tool
+      id: 1757051013937-source-1757287991929-target
+      selected: false
+      source: '1757051013937'
+      sourceHandle: source
+      target: '1757287991929'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: code
+      id: 1757287991929-source-1757289970576-target
+      selected: false
+      source: '1757287991929'
+      sourceHandle: source
+      target: '1757289970576'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: loop
+      id: 1757289970576-source-17576918797740-target
+      selected: false
+      source: '1757289970576'
+      sourceHandle: source
+      target: '17576918797740'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: tool
+      id: 1757287844330-source-17576944767590-target
+      selected: false
+      source: '1757287844330'
+      sourceHandle: source
+      target: '17576944767590'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: loop
+        targetType: code
+      id: 17576918797740-source-1757693643667-target
+      source: '17576918797740'
+      sourceHandle: source
+      target: '1757693643667'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: 1757693643667-source-1758292689685-target
+      source: '1757693643667'
+      sourceHandle: source
+      target: '1758292689685'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: tool
+        targetType: if-else
+      id: 1757691879774017576918797740-source-1758344385799-target
+      source: '1757691879774017576918797740'
+      sourceHandle: source
+      target: '1758344385799'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: if-else
+        targetType: assigner
+      id: 1758344385799-true-1757691879774017576918797741-target
+      source: '1758344385799'
+      sourceHandle: 'true'
+      target: '1757691879774017576918797741'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: if-else
+        targetType: loop-end
+      id: 1758344385799-false-1758344399182-target
+      source: '1758344385799'
+      sourceHandle: 'false'
+      target: '1758344399182'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: if-else
+      id: 17576944767590-source-17583610041920-target
+      source: '17576944767590'
+      sourceHandle: source
+      target: '17583610041920'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: http-request
+      id: 17583610041920-true-17583610525510-target
+      source: '17583610041920'
+      sourceHandle: 'true'
+      target: '17583610525510'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: http-request
+      id: 17583610041920-1226fe39-6351-40b9-ac27-1c94e401131c-17583610596160-target
+      source: '17583610041920'
+      sourceHandle: 1226fe39-6351-40b9-ac27-1c94e401131c
+      target: '17583610596160'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: http-request
+      id: 17583610041920-e63d2528-3bc1-4efb-a6dd-0772d05500e2-17583610446450-target
+      source: '17583610041920'
+      sourceHandle: e63d2528-3bc1-4efb-a6dd-0772d05500e2
+      target: '17583610446450'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: variable-aggregator
+      id: 17583610525510-source-17583610794010-target
+      source: '17583610525510'
+      sourceHandle: source
+      target: '17583610794010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: variable-aggregator
+      id: 17583610561890-source-17583610794010-target
+      source: '17583610561890'
+      sourceHandle: source
+      target: '17583610794010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: variable-aggregator
+      id: 17583610596160-source-17583610794010-target
+      source: '17583610596160'
+      sourceHandle: source
+      target: '17583610794010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: variable-aggregator
+      id: 17583610446450-source-17583610794010-target
+      source: '17583610446450'
+      sourceHandle: source
+      target: '17583610794010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: variable-aggregator
+        targetType: code
+      id: 17583610794010-source-17583611173300-target
+      source: '17583610794010'
+      sourceHandle: source
+      target: '17583611173300'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: loop
+      id: 17583611173300-source-1757051013937-target
+      source: '17583611173300'
+      sourceHandle: source
+      target: '1757051013937'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: http-request
+      id: 17583610041920-0f826233-94da-4702-8334-a35d562bac81-17583610561890-target
+      source: '17583610041920'
+      sourceHandle: 0f826233-94da-4702-8334-a35d562bac81
+      target: '17583610561890'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        sourceType: loop-start
+        targetType: code
+      id: 1757051013937start-source-1758361291582-target
+      source: 1757051013937start
+      sourceHandle: source
+      target: '1758361291582'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        sourceType: code
+        targetType: http-request
+      id: 1758361291582-source-1758361259415-target
+      source: '1758361291582'
+      sourceHandle: source
+      target: '1758361259415'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        sourceType: http-request
+        targetType: code
+      id: 1758361259415-source-1757284834830-target
+      source: '1758361259415'
+      sourceHandle: source
+      target: '1757284834830'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        sourceType: code
+        targetType: tool
+      id: 1757284834830-source-1757283927791-target
+      source: '1757284834830'
+      sourceHandle: source
+      target: '1757283927791'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: loop-start
+        targetType: code
+      id: 1757691879774start-source-1758348125251-target
+      source: 1757691879774start
+      sourceHandle: source
+      target: '1758348125251'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: code
+        targetType: tool
+      id: 1758367119575-source-1757691879774017576918797740-target
+      source: '1758367119575'
+      sourceHandle: source
+      target: '1757691879774017576918797740'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        sourceType: code
+        targetType: code
+      id: 1758348125251-source-1758367119575-target
+      source: '1758348125251'
+      sourceHandle: source
+      target: '1758367119575'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 開始
+        type: start
+        variables:
+        - label: 検索キーワード
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: keyword
+        - label: 最低価格
+          max_length: 256
+          options: []
+          required: true
+          type: number
+          variable: minPrice
+        - label: 最大価格
+          max_length: 48
+          options: []
+          required: false
+          type: number
+          variable: maxPrice
+        - hide: true
+          label: 除外キーワード
+          max_length: 48
+          options: []
+          required: false
+          type: text-input
+          variable: NGKeyword
+        - default: '1010801245759743118'
+          hide: false
+          hint: ''
+          label: 楽天appID
+          max_length: 48
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: rakuten_appid
+      height: 192
+      id: '1756959299516'
+      position:
+        x: 0
+        y: 152
+      positionAbsolute:
+        x: 0
+        y: 152
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        break_conditions: []
+        desc: ''
+        error_handle_mode: terminated
+        height: 345
+        logical_operator: and
+        loop_count: 30
+        loop_variables:
+        - id: 36b9a25b-50da-4d3c-837a-4f3e66ef3af1
+          label: i
+          value: '0'
+          value_type: constant
+          var_type: number
+        selected: false
+        start_node_id: 1757051013937start
+        title: ループ
+        type: loop
+        width: 1774
+      height: 345
+      id: '1757051013937'
+      position:
+        x: 2780.285714285714
+        y: 146
+      positionAbsolute:
+        x: 2780.285714285714
+        y: 146
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 1774
+      zIndex: 1
+    - data:
+        desc: ''
+        isInLoop: true
+        selected: false
+        title: ''
+        type: loop-start
+      draggable: false
+      height: 48
+      id: 1757051013937start
+      parentId: '1757051013937'
+      position:
+        x: 60
+        y: 147
+      positionAbsolute:
+        x: 2840.285714285714
+        y: 293
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-loop-start
+      width: 44
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        items:
+        - input_type: constant
+          operation: +=
+          value: 1
+          variable_selector:
+          - '1757051013937'
+          - i
+          write_mode: over-write
+        loop_id: '1757051013937'
+        selected: false
+        title: 変数代入 4
+        type: assigner
+        version: '2'
+      height: 84
+      id: '1757051714252'
+      parentId: '1757051013937'
+      position:
+        x: 1472
+        y: 129
+      positionAbsolute:
+        x: 4252.285714285714
+        y: 275
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        is_team_authorization: true
+        loop_id: '1757051013937'
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            ja_JP: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            pt_BR: Array JSON de objetos, cada um com 'range' (notação A1 como 'Sheet1!A1:B5')
+              e 'values' (array 2D de valores de célula). Exemplo - [{"range":"Sheet1!A1:B2",
+              "values":[["Nome","Idade"],["João",30]]}]
+            zh_Hans: JSON 对象数组，每个对象包含 'range'（A1 表示法，如 'Sheet1!A1:B5'）和 'values'（单元格值的二维数组）。例如
+              - [{"range":"Sheet1!A1:B2", "values":[["姓名","年龄"],["约翰",30]]}]
+          label:
+            en_US: Data
+            ja_JP: Data
+            pt_BR: Dados
+            zh_Hans: 数据
+          llm_description: An array of objects to update in Google Sheets. Each object
+            must contain - 1) 'range' - A string in A1 notation specifying the cells
+            (e.g., 'A1:B5', 'Sheet1!A1:B5', or 'MyNamedRange'), and 2) 'values' -
+            A 2D array representing row/column values to insert. Example - [{"range":"Sheet1!A1:B2",
+            "values":[["Header1","Header2"],["Value1","Value2"]]}]. The dimensions
+            of 'values' must match the range, and you can update multiple non-contiguous
+            ranges in a single request.
+          max: null
+          min: null
+          name: data
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: USER_ENTERED
+          form: form
+          human_description:
+            en_US: How the input data should be interpreted
+            ja_JP: How the input data should be interpreted
+            pt_BR: Como os dados de entrada devem ser interpretados
+            zh_Hans: 如何解释输入数据
+          label:
+            en_US: Value Input Option
+            ja_JP: Value Input Option
+            pt_BR: Opção de Entrada de Valor
+            zh_Hans: 值输入选项
+          llm_description: How the input data should be interpreted
+          max: null
+          min: null
+          name: value_input_option
+          options:
+          - icon: ''
+            label:
+              en_US: USER_ENTERED
+              ja_JP: USER_ENTERED
+              pt_BR: ENTRADA DO USUÁRIO
+              zh_Hans: 用户输入
+            value: USER_ENTERED
+          - icon: ''
+            label:
+              en_US: RAW
+              ja_JP: RAW
+              pt_BR: BRUTO
+              zh_Hans: 原始
+            value: RAW
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 0
+          form: form
+          human_description:
+            en_US: Whether to include the values in the response
+            ja_JP: Whether to include the values in the response
+            pt_BR: Se deve incluir os valores na resposta
+            zh_Hans: 是否在响应中包含值
+          label:
+            en_US: Include Values in Response
+            ja_JP: Include Values in Response
+            pt_BR: Incluir Valores na Resposta
+            zh_Hans: 在响应中包含值
+          llm_description: Whether to include the values in the response
+          max: null
+          min: null
+          name: include_values_in_response
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: boolean
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How the values in the response should be rendered
+            ja_JP: How the values in the response should be rendered
+            pt_BR: Como os valores na resposta devem ser renderizados
+            zh_Hans: 响应中的值应如何渲染
+          label:
+            en_US: Response Value Render Option
+            ja_JP: Response Value Render Option
+            pt_BR: Opção de Renderização de Valor da Resposta
+            zh_Hans: 响应值渲染选项
+          llm_description: How the values in the response should be rendered
+          max: null
+          min: null
+          name: response_value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How dates, times, and durations in the response should be rendered
+            ja_JP: How dates, times, and durations in the response should be rendered
+            pt_BR: Como datas, horários e durações na resposta devem ser renderizados
+            zh_Hans: 响应中的日期、时间和持续时间应如何渲染
+          label:
+            en_US: Response Date Time Render Option
+            ja_JP: Response Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora da Resposta
+            zh_Hans: 响应日期时间渲染选项
+          llm_description: How dates, times, and durations in the response should
+            be rendered
+          max: null
+          min: null
+          name: response_date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          data: ''
+          include_values_in_response: ''
+          response_date_time_render_option: ''
+          response_value_render_option: ''
+          spreadsheet_id: ''
+          value_input_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        selected: false
+        title: Batch Update
+        tool_configurations:
+          include_values_in_response:
+            type: constant
+            value: 0
+          response_date_time_render_option:
+            type: constant
+            value: null
+          response_value_render_option:
+            type: constant
+            value: null
+          value_input_option:
+            type: constant
+            value: USER_ENTERED
+        tool_description: Update data in multiple ranges in a Google Sheet
+        tool_label: Batch Update
+        tool_name: batch_update
+        tool_node_version: '2'
+        tool_parameters:
+          data:
+            type: mixed
+            value: '{{#1757284834830.data#}}'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#env.sheet_id#}}'
+        type: tool
+      height: 166
+      id: '1757283927791'
+      parentId: '1757051013937'
+      position:
+        x: 1150
+        y: 88
+      positionAbsolute:
+        x: 3930.285714285714
+        y: 234
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "import json\n\ndef main(index: int, ext_data: dict, json_data: str)\
+          \ -> dict:\n    # --- APIレスポンスから価格を取得 ---\n    data = json.loads(json_data)\n\
+          \    items_list = data.get(\"Items\", [])\n    # item_price = None  # 見つからなかった場合のために初期化\n\
+          \n    # items_listが空でないことを確認\n    # if items_list:\n    item_data = items_list[index].get(\"\
+          Item\", {})\n    item_price = item_data.get(\"itemPrice\")\n\n    # ---\
+          \ ext_dataから商品情報を取得 ---\n    products_list = ext_data.get(\"products\",\
+          \ [])\n    \n    # indexがproducts_listの範囲内にあるか確認\n    if not (0 <= index\
+          \ < len(products_list)):\n        return { \"error\": f\"指定されたindex {index}\
+          \ は範囲外です。\" }\n        \n    product = products_list[index]\n    medium_images\
+          \ = product.get(\"medium_image_urls\", [])\n    \n    # --- Google Sheets\
+          \ API用のデータを作成 ---\n    # row（行データ）を作成\n    row = [\n        index + 1,\n\
+          \        product.get(\"item_name\", \"\"),\n        product.get(\"item_price\"\
+          , \"\"),\n        item_price, # APIから取得した価格\n        product.get(\"item_url\"\
+          , \"\"),\n        medium_images[0] if medium_images else \"\", # 画像がない場合も考慮\n\
+          \        product.get(\"review_count\", \"\"),\n        product.get(\"review_average\"\
+          , \"\")\n    ]\n    \n    # values（行データのリスト）を作成\n    values = [row]\n\n\
+          \    # 書き込むセル範囲を決定 (ヘッダーが1行目にあると仮定し、index 0 は2行目から書き込む)\n    range_str =\
+          \ f\"B{index + 2}:I{index + 2}\"\n\n    # Google Sheets APIが要求する最終的な形式を作成\n\
+          \    # \"values\"には、リストのリストである `values` を渡す\n    data_for_api = [{\"range\"\
+          : range_str, \"values\": values}]\n\n    # json.dumps() を使わずに、Pythonオブジェクトのまま返す\n\
+          \    return {\n        \"data\": json.dumps(data_for_api, ensure_ascii=False)\n\
+          \    }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        outputs:
+          data:
+            children: null
+            type: string
+        selected: false
+        title: コード実行 2
+        type: code
+        variables:
+        - value_selector:
+          - '1757051013937'
+          - i
+          value_type: number
+          variable: index
+        - value_selector:
+          - '17583611173300'
+          - result
+          value_type: object
+          variable: ext_data
+        - value_selector:
+          - '17583610525510'
+          - body
+          value_type: string
+          variable: json_data
+      height: 52
+      id: '1757284834830'
+      parentId: '1757051013937'
+      position:
+        x: 828
+        y: 145
+      positionAbsolute:
+        x: 3608.285714285714
+        y: 291
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            ja_JP: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            pt_BR: Array JSON de objetos, cada um com 'range' (notação A1 como 'Sheet1!A1:B5')
+              e 'values' (array 2D de valores de célula). Exemplo - [{"range":"Sheet1!A1:B2",
+              "values":[["Nome","Idade"],["João",30]]}]
+            zh_Hans: JSON 对象数组，每个对象包含 'range'（A1 表示法，如 'Sheet1!A1:B5'）和 'values'（单元格值的二维数组）。例如
+              - [{"range":"Sheet1!A1:B2", "values":[["姓名","年龄"],["约翰",30]]}]
+          label:
+            en_US: Data
+            ja_JP: Data
+            pt_BR: Dados
+            zh_Hans: 数据
+          llm_description: An array of objects to update in Google Sheets. Each object
+            must contain - 1) 'range' - A string in A1 notation specifying the cells
+            (e.g., 'A1:B5', 'Sheet1!A1:B5', or 'MyNamedRange'), and 2) 'values' -
+            A 2D array representing row/column values to insert. Example - [{"range":"Sheet1!A1:B2",
+            "values":[["Header1","Header2"],["Value1","Value2"]]}]. The dimensions
+            of 'values' must match the range, and you can update multiple non-contiguous
+            ranges in a single request.
+          max: null
+          min: null
+          name: data
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: USER_ENTERED
+          form: form
+          human_description:
+            en_US: How the input data should be interpreted
+            ja_JP: How the input data should be interpreted
+            pt_BR: Como os dados de entrada devem ser interpretados
+            zh_Hans: 如何解释输入数据
+          label:
+            en_US: Value Input Option
+            ja_JP: Value Input Option
+            pt_BR: Opção de Entrada de Valor
+            zh_Hans: 值输入选项
+          llm_description: How the input data should be interpreted
+          max: null
+          min: null
+          name: value_input_option
+          options:
+          - icon: ''
+            label:
+              en_US: USER_ENTERED
+              ja_JP: USER_ENTERED
+              pt_BR: ENTRADA DO USUÁRIO
+              zh_Hans: 用户输入
+            value: USER_ENTERED
+          - icon: ''
+            label:
+              en_US: RAW
+              ja_JP: RAW
+              pt_BR: BRUTO
+              zh_Hans: 原始
+            value: RAW
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 0
+          form: form
+          human_description:
+            en_US: Whether to include the values in the response
+            ja_JP: Whether to include the values in the response
+            pt_BR: Se deve incluir os valores na resposta
+            zh_Hans: 是否在响应中包含值
+          label:
+            en_US: Include Values in Response
+            ja_JP: Include Values in Response
+            pt_BR: Incluir Valores na Resposta
+            zh_Hans: 在响应中包含值
+          llm_description: Whether to include the values in the response
+          max: null
+          min: null
+          name: include_values_in_response
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: boolean
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How the values in the response should be rendered
+            ja_JP: How the values in the response should be rendered
+            pt_BR: Como os valores na resposta devem ser renderizados
+            zh_Hans: 响应中的值应如何渲染
+          label:
+            en_US: Response Value Render Option
+            ja_JP: Response Value Render Option
+            pt_BR: Opção de Renderização de Valor da Resposta
+            zh_Hans: 响应值渲染选项
+          llm_description: How the values in the response should be rendered
+          max: null
+          min: null
+          name: response_value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How dates, times, and durations in the response should be rendered
+            ja_JP: How dates, times, and durations in the response should be rendered
+            pt_BR: Como datas, horários e durações na resposta devem ser renderizados
+            zh_Hans: 响应中的日期、时间和持续时间应如何渲染
+          label:
+            en_US: Response Date Time Render Option
+            ja_JP: Response Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora da Resposta
+            zh_Hans: 响应日期时间渲染选项
+          llm_description: How dates, times, and durations in the response should
+            be rendered
+          max: null
+          min: null
+          name: response_date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          data: ''
+          include_values_in_response: ''
+          response_date_time_render_option: ''
+          response_value_render_option: ''
+          spreadsheet_id: ''
+          value_input_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        selected: false
+        title: Batch Update
+        tool_configurations:
+          include_values_in_response:
+            type: constant
+            value: 0
+          response_date_time_render_option:
+            type: constant
+            value: null
+          response_value_render_option:
+            type: constant
+            value: null
+          value_input_option:
+            type: constant
+            value: USER_ENTERED
+        tool_description: Update data in multiple ranges in a Google Sheet
+        tool_label: Batch Update
+        tool_name: batch_update
+        tool_node_version: '2'
+        tool_parameters:
+          data:
+            type: mixed
+            value: '{{#1757287868179.data#}}'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#env.sheet_id#}}'
+        type: tool
+      height: 166
+      id: '1757287844330'
+      position:
+        x: 684
+        y: 165
+      positionAbsolute:
+        x: 684
+        y: 165
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main() -> dict:\n    # クリアしたい範囲\n    target_range\
+          \ = \"Sheet1!B2:O300\" \n\n    # 範囲の行数と列数を計算\n    num_rows = 300 - 2 + 1\
+          \  # 299行\n    num_cols = 14            # B, C, D, E, Fの5列\n\n    # 299行\
+          \ x 5列の空の二次元リストを作成\n    empty_values = [[\"\"] * num_cols for _ in range(num_rows)]\n\
+          \n    # API用のデータを作成\n    data_to_clear = [{\"range\": target_range, \"values\"\
+          : empty_values}]\n\n    # 指定された形式で辞書を返す\n    return {\"data\": json.dumps(data_to_clear)}"
+        code_language: python3
+        desc: ''
+        outputs:
+          data:
+            children: null
+            type: string
+        selected: false
+        title: コード実行 3
+        type: code
+        variables: []
+      height: 52
+      id: '1757287868179'
+      position:
+        x: 342
+        y: 222
+      positionAbsolute:
+        x: 342
+        y: 222
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: List of ranges to retrieve (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            ja_JP: List of ranges to retrieve (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            pt_BR: Lista de intervalos para recuperar (ex. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            zh_Hans: 要检索的范围列表（例如 ["Sheet1!A1:C3", "Sheet2!B2:D4"]）
+          label:
+            en_US: Ranges
+            ja_JP: Ranges
+            pt_BR: Intervalos
+            zh_Hans: 范围列表
+          llm_description: An array of range strings to retrieve in A1 notation or
+            R1C1 notation (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+          max: null
+          min: null
+          name: ranges
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: SERIAL_NUMBER
+          form: form
+          human_description:
+            en_US: How dates, times, and durations should be represented in the output
+            ja_JP: How dates, times, and durations should be represented in the output
+            pt_BR: Como datas, horários e durações devem ser representados na saída
+            zh_Hans: 日期、时间和持续时间在输出中的表示方式
+          label:
+            en_US: Date Time Render Option
+            ja_JP: Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora
+            zh_Hans: 日期时间渲染选项
+          llm_description: How dates, times, and durations should be represented in
+            the output
+          max: null
+          min: null
+          name: date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: The major dimension that results should use
+            ja_JP: The major dimension that results should use
+            pt_BR: A dimensão principal que os resultados devem usar
+            zh_Hans: 结果应使用的主要维度
+          label:
+            en_US: Major Dimension
+            ja_JP: Major Dimension
+            pt_BR: Dimensão Principal
+            zh_Hans: 主要维度
+          llm_description: The major dimension that results should use (ROWS or COLUMNS)
+          max: null
+          min: null
+          name: major_dimension
+          options:
+          - icon: ''
+            label:
+              en_US: ROWS
+              ja_JP: ROWS
+              pt_BR: LINHAS
+              zh_Hans: 行
+            value: ROWS
+          - icon: ''
+            label:
+              en_US: COLUMNS
+              ja_JP: COLUMNS
+              pt_BR: COLUNAS
+              zh_Hans: 列
+            value: COLUMNS
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How values should be represented in the output
+            ja_JP: How values should be represented in the output
+            pt_BR: Como os valores devem ser representados na saída
+            zh_Hans: 值在输出中的表示方式
+          label:
+            en_US: Value Render Option
+            ja_JP: Value Render Option
+            pt_BR: Opção de Renderização de Valor
+            zh_Hans: 值渲染选项
+          llm_description: How values should be represented in the output
+          max: null
+          min: null
+          name: value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          date_time_render_option: ''
+          major_dimension: ''
+          ranges: ''
+          spreadsheet_id: ''
+          value_render_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        selected: false
+        title: Batch Get
+        tool_configurations:
+          date_time_render_option:
+            type: constant
+            value: SERIAL_NUMBER
+          major_dimension:
+            type: constant
+            value: null
+          value_render_option:
+            type: constant
+            value: null
+        tool_description: Retrieve data from multiple ranges in a Google Sheet
+        tool_label: Batch Get
+        tool_name: batch_get
+        tool_node_version: '2'
+        tool_parameters:
+          ranges:
+            type: mixed
+            value: '["Sheet1!B1:I300"]'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#env.sheet_id#}}'
+        type: tool
+      height: 140
+      id: '1757287991929'
+      position:
+        x: 4650
+        y: 259
+      positionAbsolute:
+        x: 4650
+        y: 259
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(input_data: list) -> dict:\n    \"\"\"\n  \
+          \  Googleスプレッドシートのデータ（リスト形式）を受け取り、\n    ヘッダーをキーにしたオブジェクトのリストに変換して返す。\n \
+          \   各productには連番も含める。\n    \"\"\"\n    try:\n        # 1. スプレッドシートの二次元配列データを抽出\n\
+          \        values = input_data[0]['valueRanges'][0]['values']\n\n        #\
+          \ 2. データが空、またはヘッダー行しかない場合はエラーを返す\n        if not values or len(values) <\
+          \ 2:\n            return {\"result\": \"エラー：有効な商品データが見つかりません\"}\n\n    \
+          \    # 3. 最初の行をヘッダーとして、2行目以降をデータ行として分離\n        header = values[0]\n   \
+          \     data_rows = values[1:]\n\n        products = []\n        # 4. 各データ行をループ処理（enumerateで連番を生成）\n\
+          \        for index, row in enumerate(data_rows, start=1):\n            #\
+          \ zipを使ってヘッダーと行データを組み合わせ、辞書（オブジェクト）を作成\n            product_info = dict(zip(header,\
+          \ row))\n            # 商品番号を追加\n            product_info[\"検索順位\"] = index\n\
+          \            products.append(product_info)\n\n        # 5. 最終的な結果を返す\n \
+          \       return {\n            \"result\": {\n                \"total_products\"\
+          : len(products),\n                \"products\": products\n            }\n\
+          \        }\n\n    except (KeyError, IndexError, TypeError) as e:\n     \
+          \   return {\n            \"result\": f\"入力データの構造が正しくありません: {type(e).__name__}\
+          \ - {e}\"\n        }\n    except Exception as e:\n        return {\n   \
+          \         \"result\": f\"予期せぬ処理エラー: {str(e)}\"\n        }"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: object
+        selected: false
+        title: コード実行 4
+        type: code
+        variables:
+        - value_selector:
+          - '1757287991929'
+          - json
+          value_type: array[object]
+          variable: input_data
+      height: 52
+      id: '1757289970576'
+      position:
+        x: 4992
+        y: 303
+      positionAbsolute:
+        x: 4992
+        y: 303
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        break_conditions: []
+        desc: ''
+        error_handle_mode: terminated
+        height: 356
+        logical_operator: and
+        loop_count: 30
+        loop_variables:
+        - id: 4c81607c-bece-4985-8329-023df5150d4d
+          label: nn
+          value: '2'
+          value_type: constant
+          var_type: number
+        selected: false
+        start_node_id: 1757691879774start
+        title: ループ 2 d(1)
+        type: loop
+        width: 2028
+      height: 356
+      id: '17576918797740'
+      position:
+        x: 5334
+        y: 151
+      positionAbsolute:
+        x: 5334
+        y: 151
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 2028
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        is_team_authorization: true
+        loop_id: '17576918797740'
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            ja_JP: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            pt_BR: Array JSON de objetos, cada um com 'range' (notação A1 como 'Sheet1!A1:B5')
+              e 'values' (array 2D de valores de célula). Exemplo - [{"range":"Sheet1!A1:B2",
+              "values":[["Nome","Idade"],["João",30]]}]
+            zh_Hans: JSON 对象数组，每个对象包含 'range'（A1 表示法，如 'Sheet1!A1:B5'）和 'values'（单元格值的二维数组）。例如
+              - [{"range":"Sheet1!A1:B2", "values":[["姓名","年龄"],["约翰",30]]}]
+          label:
+            en_US: Data
+            ja_JP: Data
+            pt_BR: Dados
+            zh_Hans: 数据
+          llm_description: An array of objects to update in Google Sheets. Each object
+            must contain - 1) 'range' - A string in A1 notation specifying the cells
+            (e.g., 'A1:B5', 'Sheet1!A1:B5', or 'MyNamedRange'), and 2) 'values' -
+            A 2D array representing row/column values to insert. Example - [{"range":"Sheet1!A1:B2",
+            "values":[["Header1","Header2"],["Value1","Value2"]]}]. The dimensions
+            of 'values' must match the range, and you can update multiple non-contiguous
+            ranges in a single request.
+          max: null
+          min: null
+          name: data
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: USER_ENTERED
+          form: form
+          human_description:
+            en_US: How the input data should be interpreted
+            ja_JP: How the input data should be interpreted
+            pt_BR: Como os dados de entrada devem ser interpretados
+            zh_Hans: 如何解释输入数据
+          label:
+            en_US: Value Input Option
+            ja_JP: Value Input Option
+            pt_BR: Opção de Entrada de Valor
+            zh_Hans: 值输入选项
+          llm_description: How the input data should be interpreted
+          max: null
+          min: null
+          name: value_input_option
+          options:
+          - icon: ''
+            label:
+              en_US: USER_ENTERED
+              ja_JP: USER_ENTERED
+              pt_BR: ENTRADA DO USUÁRIO
+              zh_Hans: 用户输入
+            value: USER_ENTERED
+          - icon: ''
+            label:
+              en_US: RAW
+              ja_JP: RAW
+              pt_BR: BRUTO
+              zh_Hans: 原始
+            value: RAW
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 0
+          form: form
+          human_description:
+            en_US: Whether to include the values in the response
+            ja_JP: Whether to include the values in the response
+            pt_BR: Se deve incluir os valores na resposta
+            zh_Hans: 是否在响应中包含值
+          label:
+            en_US: Include Values in Response
+            ja_JP: Include Values in Response
+            pt_BR: Incluir Valores na Resposta
+            zh_Hans: 在响应中包含值
+          llm_description: Whether to include the values in the response
+          max: null
+          min: null
+          name: include_values_in_response
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: boolean
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How the values in the response should be rendered
+            ja_JP: How the values in the response should be rendered
+            pt_BR: Como os valores na resposta devem ser renderizados
+            zh_Hans: 响应中的值应如何渲染
+          label:
+            en_US: Response Value Render Option
+            ja_JP: Response Value Render Option
+            pt_BR: Opção de Renderização de Valor da Resposta
+            zh_Hans: 响应值渲染选项
+          llm_description: How the values in the response should be rendered
+          max: null
+          min: null
+          name: response_value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How dates, times, and durations in the response should be rendered
+            ja_JP: How dates, times, and durations in the response should be rendered
+            pt_BR: Como datas, horários e durações na resposta devem ser renderizados
+            zh_Hans: 响应中的日期、时间和持续时间应如何渲染
+          label:
+            en_US: Response Date Time Render Option
+            ja_JP: Response Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora da Resposta
+            zh_Hans: 响应日期时间渲染选项
+          llm_description: How dates, times, and durations in the response should
+            be rendered
+          max: null
+          min: null
+          name: response_date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          data: ''
+          include_values_in_response: ''
+          response_date_time_render_option: ''
+          response_value_render_option: ''
+          spreadsheet_id: ''
+          value_input_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: workflow.blocks.tool 6
+        tool_configurations:
+          include_values_in_response:
+            type: constant
+            value: 0
+          response_date_time_render_option:
+            type: constant
+            value: null
+          response_value_render_option:
+            type: constant
+            value: null
+          value_input_option:
+            type: constant
+            value: USER_ENTERED
+        tool_description: Update data in multiple ranges in a Google Sheet
+        tool_label: Batch Update
+        tool_name: batch_update
+        tool_node_version: '2'
+        tool_parameters:
+          data:
+            type: mixed
+            value: '[{"range":"Sheet1!J{{#17576918797740.nn#}}:O{{#17576918797740.nn#}}","values":[["{{#1758367119575.latest_review_date#}}","{{#1758367119575.review_count_3months#}}","{{#1758367119575.average_rating_3months#}}","{{#1758367119575.high_rating_reviews#}}","{{#1758367119575.mid_rating_reviews#}}","{{#1758367119575.low_rating_reviews#}}"]]}]'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#env.sheet_id#}}'
+        type: tool
+      height: 195
+      id: '1757691879774017576918797740'
+      parentId: '17576918797740'
+      position:
+        x: 828
+        y: 60
+      positionAbsolute:
+        x: 6162
+        y: 211
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        items:
+        - input_type: constant
+          operation: +=
+          value: 1
+          variable_selector:
+          - '17576918797740'
+          - nn
+          write_mode: over-write
+        loop_id: '17576918797740'
+        selected: false
+        title: 変数代入 4
+        type: assigner
+        version: '2'
+      height: 84
+      id: '1757691879774017576918797741'
+      parentId: '17576918797740'
+      position:
+        x: 1492
+        y: 95
+      positionAbsolute:
+        x: 6826
+        y: 246
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInLoop: true
+        selected: false
+        title: ''
+        type: loop-start
+      draggable: false
+      height: 48
+      id: 1757691879774start
+      parentId: '17576918797740'
+      position:
+        x: 60
+        y: 134
+      positionAbsolute:
+        x: 5394
+        y: 285
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-loop-start
+      width: 44
+      zIndex: 1002
+    - data:
+        code: "\ndef main(sheet_id) -> dict:\n    return {\n        \"result\": f\"\
+          [スプシurl](https://docs.google.com/spreadsheets/d/{sheet_id})\",\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: コード実行 9
+        type: code
+        variables:
+        - value_selector:
+          - env
+          - sheet_id
+          value_type: secret
+          variable: sheet_id
+      height: 52
+      id: '1757693643667'
+      position:
+        x: 7462
+        y: 303
+      positionAbsolute:
+        x: 7462
+        y: 303
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            ja_JP: JSON array of objects, each with 'range' (A1 notation like 'Sheet1!A1:B5')
+              and 'values' (2D array of cell values). Example - [{"range":"Sheet1!A1:B2",
+              "values":[["Name","Age"],["John",30]]}]
+            pt_BR: Array JSON de objetos, cada um com 'range' (notação A1 como 'Sheet1!A1:B5')
+              e 'values' (array 2D de valores de célula). Exemplo - [{"range":"Sheet1!A1:B2",
+              "values":[["Nome","Idade"],["João",30]]}]
+            zh_Hans: JSON 对象数组，每个对象包含 'range'（A1 表示法，如 'Sheet1!A1:B5'）和 'values'（单元格值的二维数组）。例如
+              - [{"range":"Sheet1!A1:B2", "values":[["姓名","年龄"],["约翰",30]]}]
+          label:
+            en_US: Data
+            ja_JP: Data
+            pt_BR: Dados
+            zh_Hans: 数据
+          llm_description: An array of objects to update in Google Sheets. Each object
+            must contain - 1) 'range' - A string in A1 notation specifying the cells
+            (e.g., 'A1:B5', 'Sheet1!A1:B5', or 'MyNamedRange'), and 2) 'values' -
+            A 2D array representing row/column values to insert. Example - [{"range":"Sheet1!A1:B2",
+            "values":[["Header1","Header2"],["Value1","Value2"]]}]. The dimensions
+            of 'values' must match the range, and you can update multiple non-contiguous
+            ranges in a single request.
+          max: null
+          min: null
+          name: data
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: USER_ENTERED
+          form: form
+          human_description:
+            en_US: How the input data should be interpreted
+            ja_JP: How the input data should be interpreted
+            pt_BR: Como os dados de entrada devem ser interpretados
+            zh_Hans: 如何解释输入数据
+          label:
+            en_US: Value Input Option
+            ja_JP: Value Input Option
+            pt_BR: Opção de Entrada de Valor
+            zh_Hans: 值输入选项
+          llm_description: How the input data should be interpreted
+          max: null
+          min: null
+          name: value_input_option
+          options:
+          - icon: ''
+            label:
+              en_US: USER_ENTERED
+              ja_JP: USER_ENTERED
+              pt_BR: ENTRADA DO USUÁRIO
+              zh_Hans: 用户输入
+            value: USER_ENTERED
+          - icon: ''
+            label:
+              en_US: RAW
+              ja_JP: RAW
+              pt_BR: BRUTO
+              zh_Hans: 原始
+            value: RAW
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 0
+          form: form
+          human_description:
+            en_US: Whether to include the values in the response
+            ja_JP: Whether to include the values in the response
+            pt_BR: Se deve incluir os valores na resposta
+            zh_Hans: 是否在响应中包含值
+          label:
+            en_US: Include Values in Response
+            ja_JP: Include Values in Response
+            pt_BR: Incluir Valores na Resposta
+            zh_Hans: 在响应中包含值
+          llm_description: Whether to include the values in the response
+          max: null
+          min: null
+          name: include_values_in_response
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: boolean
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How the values in the response should be rendered
+            ja_JP: How the values in the response should be rendered
+            pt_BR: Como os valores na resposta devem ser renderizados
+            zh_Hans: 响应中的值应如何渲染
+          label:
+            en_US: Response Value Render Option
+            ja_JP: Response Value Render Option
+            pt_BR: Opção de Renderização de Valor da Resposta
+            zh_Hans: 响应值渲染选项
+          llm_description: How the values in the response should be rendered
+          max: null
+          min: null
+          name: response_value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How dates, times, and durations in the response should be rendered
+            ja_JP: How dates, times, and durations in the response should be rendered
+            pt_BR: Como datas, horários e durações na resposta devem ser renderizados
+            zh_Hans: 响应中的日期、时间和持续时间应如何渲染
+          label:
+            en_US: Response Date Time Render Option
+            ja_JP: Response Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora da Resposta
+            zh_Hans: 响应日期时间渲染选项
+          llm_description: How dates, times, and durations in the response should
+            be rendered
+          max: null
+          min: null
+          name: response_date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          data: ''
+          include_values_in_response: ''
+          response_date_time_render_option: ''
+          response_value_render_option: ''
+          spreadsheet_id: ''
+          value_input_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        selected: false
+        title: Batch Update (1)
+        tool_configurations:
+          include_values_in_response:
+            type: constant
+            value: 0
+          response_date_time_render_option:
+            type: constant
+            value: null
+          response_value_render_option:
+            type: constant
+            value: null
+          value_input_option:
+            type: constant
+            value: USER_ENTERED
+        tool_description: Update data in multiple ranges in a Google Sheet
+        tool_label: Batch Update
+        tool_name: batch_update
+        tool_node_version: '2'
+        tool_parameters:
+          data:
+            type: mixed
+            value: '[{"range":"Sheet1!B1:O1", "values":[["検索順位","商品名","価格(送料抜)","価格(送料込)","商品URL","サムネURL","レビュー数","レビュー平均","レビュー最新日","直近3ヶ月のレビュー数","直近3ヶ月のレビュー平均","高評価レビュー","中評価レビュー","低評価レビュー"]]}]'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#env.sheet_id#}}'
+        type: tool
+      height: 166
+      id: '17576944767590'
+      position:
+        x: 1026
+        y: 165
+      positionAbsolute:
+        x: 1026
+        y: 165
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: 調査が終了しました。
+        desc: ''
+        selected: false
+        title: 回答
+        type: answer
+        variables: []
+      height: 100
+      id: '1758292689685'
+      position:
+        x: 7804
+        y: 279
+      positionAbsolute:
+        x: 7804
+        y: 279
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: ≤
+            id: 10a487c9-0781-49f5-a5e4-a6c964542a4a
+            value: '32'
+            varType: number
+            variable_selector:
+            - '17576918797740'
+            - nn
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        selected: false
+        title: IF/ELSE 2
+        type: if-else
+      height: 124
+      id: '1758344385799'
+      parentId: '17576918797740'
+      position:
+        x: 1150
+        y: 96
+      positionAbsolute:
+        x: 6484
+        y: 247
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        selected: false
+        title: ループ完了
+        type: loop-end
+      height: 54
+      id: '1758344399182'
+      parentId: '17576918797740'
+      position:
+        x: 1492
+        y: 239
+      positionAbsolute:
+        x: 6826
+        y: 390
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-simple
+      width: 244
+      zIndex: 1002
+    - data:
+        code: "import re\nimport requests\nfrom datetime import datetime, timedelta\n\
+          \ndef main(result, n) -> dict:\n    \"\"\"\n    指定された商品のレビューを10ページまで巡回し、\n\
+          \    直近3ヶ月のレビューの最新日、件数、平均値を算出します。\n    \"\"\"\n    n = int(n)\n    url =\
+          \ result[\"products\"][n-2][\"商品URL\"]\n    return {\n        \"url\": url\n\
+          \    }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        outputs:
+          url:
+            children: null
+            type: string
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: コード実行 7
+        type: code
+        variables:
+        - value_selector:
+          - '1757289970576'
+          - result
+          value_type: object
+          variable: result
+        - value_selector:
+          - '17576918797740'
+          - nn
+          value_type: number
+          variable: n
+      height: 81
+      id: '1758348125251'
+      parentId: '17576918797740'
+      position:
+        x: 184
+        y: 117
+      positionAbsolute:
+        x: 5518
+        y: 268
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: empty
+            id: 23f500bd-3b23-49b3-8762-d48f35d2b488
+            value: ''
+            varType: number
+            variable_selector:
+            - '1756959299516'
+            - maxPrice
+          - comparison_operator: empty
+            id: 56705d93-fddf-45b8-81a4-aceaa4acb8c6
+            value: ''
+            varType: string
+            variable_selector:
+            - '1756959299516'
+            - NGKeyword
+          id: 'true'
+          logical_operator: and
+        - case_id: 0f826233-94da-4702-8334-a35d562bac81
+          conditions:
+          - comparison_operator: not empty
+            id: c7a32cbb-ff06-4027-a2f9-9db6576bf3fd
+            value: ''
+            varType: number
+            variable_selector:
+            - '1756959299516'
+            - maxPrice
+          - comparison_operator: empty
+            id: 5a9d6d8c-0509-438a-94b4-a907f816c18d
+            value: ''
+            varType: string
+            variable_selector:
+            - '1756959299516'
+            - NGKeyword
+          id: 0f826233-94da-4702-8334-a35d562bac81
+          logical_operator: and
+        - case_id: 1226fe39-6351-40b9-ac27-1c94e401131c
+          conditions:
+          - comparison_operator: empty
+            id: c1cde3c5-bb46-43f0-8eec-88f0329b1f93
+            value: ''
+            varType: number
+            variable_selector:
+            - '1756959299516'
+            - maxPrice
+          - comparison_operator: not empty
+            id: 6e741df7-f6e5-47e0-a7a3-e877aefa77d3
+            value: ''
+            varType: string
+            variable_selector:
+            - '1756959299516'
+            - NGKeyword
+          id: 1226fe39-6351-40b9-ac27-1c94e401131c
+          logical_operator: and
+        - case_id: e63d2528-3bc1-4efb-a6dd-0772d05500e2
+          conditions:
+          - comparison_operator: not empty
+            id: 37c3750a-81e7-4acd-b429-f81f49d2306b
+            value: ''
+            varType: number
+            variable_selector:
+            - '1756959299516'
+            - maxPrice
+          - comparison_operator: not empty
+            id: 4c3dca86-2735-42cf-ab3b-8f71cadd03fc
+            value: ''
+            varType: string
+            variable_selector:
+            - '1756959299516'
+            - NGKeyword
+          id: e63d2528-3bc1-4efb-a6dd-0772d05500e2
+          logical_operator: and
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        selected: false
+        title: IF/ELSE 3 (1)
+        type: if-else
+      height: 372
+      id: '17583610041920'
+      position:
+        x: 1368
+        y: 62
+      positionAbsolute:
+        x: 1368
+        y: 62
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        method: get
+        params: 'keyword:{{#1756959299516.keyword#}}
+
+          hits:30
+
+          minPrice:{{#1756959299516.minPrice#}}
+
+          maxPrice:{{#1756959299516.maxPrice#}}
+
+          NGKeyword:{{#1756959299516.NGKeyword#}}
+
+          applicationId:{{#1756959299516.rakuten_appid#}}'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト 8 (1)
+        type: http-request
+        url: https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json
+        variables: []
+      height: 153
+      id: '17583610446450'
+      position:
+        x: 1730
+        y: 466
+      positionAbsolute:
+        x: 1730
+        y: 466
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        method: get
+        params: 'keyword:{{#1756959299516.keyword#}}
+
+          hits:30
+
+          minPrice:{{#1756959299516.minPrice#}}
+
+          applicationId:{{#1756959299516.rakuten_appid#}}'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト 5 (1)
+        type: http-request
+        url: https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json
+        variables: []
+      height: 153
+      id: '17583610525510'
+      position:
+        x: 1730
+        y: 0
+      positionAbsolute:
+        x: 1730
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        method: get
+        params: 'keyword:{{#1756959299516.keyword#}}
+
+          hits:30
+
+          minPrice:{{#1756959299516.minPrice#}}
+
+          maxPrice:{{#1756959299516.maxPrice#}}
+
+          applicationId:{{#1756959299516.rakuten_appid#}}'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト 6 (1)
+        type: http-request
+        url: https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json
+        variables: []
+      height: 153
+      id: '17583610561890'
+      position:
+        x: 1730
+        y: 699
+      positionAbsolute:
+        x: 1730
+        y: 699
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        method: get
+        params: 'keyword:{{#1756959299516.keyword#}}
+
+          hits:30
+
+          minPrice:{{#1756959299516.minPrice#}}
+
+          NGKeyword:{{#1756959299516.NGKeyword#}}
+
+          applicationId:{{#1756959299516.rakuten_appid#}}'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト 7 (1)
+        type: http-request
+        url: https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json
+        variables: []
+      height: 153
+      id: '17583610596160'
+      position:
+        x: 1730
+        y: 233
+      positionAbsolute:
+        x: 1730
+        y: 233
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        output_type: string
+        selected: false
+        title: 変数集約器 2 (1)
+        type: variable-aggregator
+        variables:
+        - - '17583610525510'
+          - body
+        - - '17583610561890'
+          - body
+        - - '17583610596160'
+          - body
+        - - '17583610446450'
+          - body
+      height: 187
+      id: '17583610794010'
+      position:
+        x: 2092
+        y: 235
+      positionAbsolute:
+        x: 2092
+        y: 235
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "import json\n\ndef main(json_data):\n    try:\n        data = json.loads(json_data)\n\
+          \        items = data.get(\"Items\", [])\n\n        if not items:\n    \
+          \        return {\n                \"result\": \"エラー：商品データが見つかりません\"\n \
+          \           }\n\n        products = []\n\n        for item_data in items:\n\
+          \            item = item_data.get(\"Item\", {})\n\n            product_info\
+          \ = {\n                \"item_name\": item.get(\"itemName\", \"商品名なし\"),\n\
+          \                \"catch_copy\": item.get(\"catchcopy\", \"キャッチコピーなし\"),\n\
+          \                \"item_price\": item.get(\"itemPrice\"),\n            \
+          \    \"price_range_min1\": item.get(\"itemPriceMin1\"),\n              \
+          \  \"price_range_max1\": item.get(\"itemPriceMax1\"),\n                \"\
+          price_range_min2\": item.get(\"itemPriceMin2\"),\n                \"price_range_max2\"\
+          : item.get(\"itemPriceMax2\"),\n                \"price_range_min3\": item.get(\"\
+          itemPriceMin3\"),\n                \"price_range_max3\": item.get(\"itemPriceMax3\"\
+          ),\n                \"has_price_range\": \"あり\" if item.get(\"hasPriceRange\"\
+          ) == 1 else \"なし\",\n                \"item_url\": item.get(\"itemUrl\"\
+          ),\n                \"affiliate_url\": item.get(\"affiliateUrl\"),\n   \
+          \             \"affiliate_rate\": item.get(\"affiliateRate\"),\n       \
+          \         \"image_flag\": \"あり\" if item.get(\"imageFlag\") == 1 else \"\
+          なし\",\n                \"small_image_urls\": [img[\"imageUrl\"] for img\
+          \ in item.get(\"smallImageUrls\", [])],\n                \"medium_image_urls\"\
+          : [img[\"imageUrl\"] for img in item.get(\"mediumImageUrls\", [])],\n  \
+          \              \"item_caption\": item.get(\"itemCaption\", \"商品説明なし\"),\n\
+          \                \"availability\": \"在庫あり\" if item.get(\"availability\"\
+          ) == 1 else \"在庫なし\",\n                \"postage_flag\": \"送料込み\" if item.get(\"\
+          postageFlag\") == 1 else \"送料別\",\n                \"credit_card_flag\"\
+          : \"可\" if item.get(\"creditCardFlag\") == 1 else \"不可\",\n            \
+          \    \"gift_flag\": \"可\" if item.get(\"giftFlag\") == 1 else \"不可\",\n\
+          \                \"ship_overseas_flag\": \"可\" if item.get(\"shipOverseasFlag\"\
+          ) == 1 else \"不可\",\n                \"ship_overseas_area\": item.get(\"\
+          shipOverseasArea\"),\n                \"asuraku_flag\": \"対応\" if item.get(\"\
+          asurakuFlag\") == 1 else \"非対応\",\n                \"asuraku_closing_time\"\
+          : item.get(\"asurakuClosingTime\"),\n                \"asuraku_area\": item.get(\"\
+          asurakuArea\"),\n                \"start_time\": item.get(\"startTime\"\
+          ),\n                \"end_time\": item.get(\"endTime\"),\n             \
+          \   \"review_count\": item.get(\"reviewCount\"),\n                \"review_average\"\
+          : item.get(\"reviewAverage\"),\n                \"point_rate\": item.get(\"\
+          pointRate\"),\n                \"point_rate_start_time\": item.get(\"pointRateStartTime\"\
+          ),\n                \"point_rate_end_time\": item.get(\"pointRateEndTime\"\
+          ),\n                \"shop_name\": item.get(\"shopName\", \"ショップ名なし\"),\n\
+          \                \"shop_code\": item.get(\"shopCode\"),\n              \
+          \  \"shop_url\": item.get(\"shopUrl\"),\n                \"shop_of_the_year_flag\"\
+          : \"受賞\" if item.get(\"shopOfTheYearFlag\") == 1 else \"非受賞\",\n       \
+          \         \"genre_id\": item.get(\"genreId\"),\n                \"tag_ids\"\
+          : item.get(\"tagIds\"),\n                \"item_code\": item.get(\"itemCode\"\
+          )\n            }\n            products.append(product_info)\n\n        return\
+          \ {\n            \"result\": {\n                \"total_products\": len(products),\n\
+          \                \"products\": products\n            }\n        }\n\n  \
+          \  except json.JSONDecodeError as e:\n        return {\n            \"result\"\
+          : f\"JSONの解析エラー: {str(e)}\"\n        }\n    except Exception as e:\n   \
+          \     return {\n            \"result\": f\"処理エラー: {str(e)}\"\n        }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        outputs:
+          result:
+            children: null
+            type: object
+        selected: false
+        title: コード実行 2 (1)
+        type: code
+        variables:
+        - value_selector:
+          - '17583610794010'
+          - output
+          value_type: string
+          variable: json_data
+      height: 52
+      id: '17583611173300'
+      position:
+        x: 2434
+        y: 303
+      positionAbsolute:
+        x: 2434
+        y: 303
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト 5
+        type: http-request
+        url: https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&itemCode={{#1758361291582.item_code#}}&postageFlag=1&applicationId={{#1756959299516.rakuten_appid#}}
+        variables: []
+      height: 222
+      id: '1758361259415'
+      parentId: '1757051013937'
+      position:
+        x: 506
+        y: 60
+      positionAbsolute:
+        x: 3286.285714285714
+        y: 206
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "import json\nimport requests\n\ndef main(index: int, ext_data: dict)\
+          \ -> dict:\n    products_list = ext_data.get(\"products\", [])\n    product\
+          \ = products_list[index]\n    item_code = product.get(\"item_code\", \"\"\
+          )\n       \n    return {\n        \"item_code\": item_code\n    }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1757051013937'
+        outputs:
+          item_code:
+            children: null
+            type: string
+        retry_config:
+          max_retries: '5'
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: コード実行 9
+        type: code
+        variables:
+        - value_selector:
+          - '1757051013937'
+          - i
+          value_type: number
+          variable: index
+        - value_selector:
+          - '17583611173300'
+          - result
+          value_type: object
+          variable: ext_data
+      height: 81
+      id: '1758361291582'
+      parentId: '1757051013937'
+      position:
+        x: 184
+        y: 130
+      positionAbsolute:
+        x: 2964.285714285714
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "import re\nimport requests\nfrom datetime import datetime, timedelta\n\
+          \ndef main(result, n, url, chunk_size) -> dict:\n    \"\"\"\n    指定された商品のレビューを10ページまで巡回し、\n\
+          \    直近3ヶ月のレビューの最新日、件数、平均値を算出します。\n    chunk_size: bodyを分割するサイズ\n    \"\"\
+          \"\n    try:\n        response = requests.get(url)\n        response.raise_for_status()\n\
+          \        full_body = response.text\n        \n        # matchesが見つかるまでchunk_numを増やしながら検索\n\
+          \        chunk_num = 1\n        max_chunks = (len(full_body) // chunk_size)\
+          \ + 1\n        matches = []\n        \n        while chunk_num <= max_chunks:\n\
+          \            start = chunk_size * (chunk_num - 1)\n            end = chunk_size\
+          \ * chunk_num\n            body = full_body[start:end]\n            \n \
+          \           pattern = r'ratItemId[\"\\']\\s*:\\s*[\"\\']([^\"\\']+)[\"\\\
+          ']'\n            matches = re.findall(pattern, body)\n            \n   \
+          \         if matches:\n                break\n            \n           \
+          \ chunk_num += 1\n        \n        if not matches:\n            return\
+          \ {\n                \"latest_review_date\": \"商品IDが見つかりませんでした。\",\n   \
+          \             \"review_count_3months\": 0.0,\n                \"average_rating_3months\"\
+          : 0.0,\n                \"high_rating_reviews\": \"\",\n               \
+          \ \"mid_rating_reviews\": \"\",\n                \"low_rating_reviews\"\
+          : \"\"\n            }\n        \n        unique_ids = list(dict.fromkeys(matches))\n\
+          \        \n    except requests.Timeout:\n        return {\n            \"\
+          latest_review_date\": \"タイムアウト: サーバーからの応答が遅すぎます\",\n            \"review_count_3months\"\
+          : 0.0,\n            \"average_rating_3months\": 0.0,\n            \"high_rating_reviews\"\
+          : \"\",\n            \"mid_rating_reviews\": \"\",\n            \"low_rating_reviews\"\
+          : \"\"\n        }\n    except requests.RequestException as e:\n        return\
+          \ {\n            \"latest_review_date\": \"商品ページの取得に失敗\",\n            \"\
+          review_count_3months\": 0.0,\n            \"average_rating_3months\": 0.0,\n\
+          \            \"high_rating_reviews\": \"\",\n            \"mid_rating_reviews\"\
+          : \"\",\n            \"low_rating_reviews\": \"\"\n        }\n\n    item_id\
+          \ = unique_ids[0].replace('/', '_')\n    all_reviews = []\n    page_num\
+          \ = 1\n    three_months_ago = datetime.now() - timedelta(days=90)\n    found_old_review\
+          \ = False\n\n    # 3ヶ月以前のレビューが見つかるまでループ\n    while not found_old_review:\n\
+          \        review_page_url = f\"https://review.rakuten.co.jp/item/1/{item_id}?p={page_num}&sort=6#itemReviewList\"\
+          \n        \n        try:\n            response = requests.get(review_page_url,\
+          \ timeout=10)\n            response.raise_for_status()\n            body\
+          \ = response.text\n        except requests.RequestException:\n         \
+          \   break\n\n        review_blocks = re.findall(r'<div class=\"container--_-T98.*?</li>',\
+          \ body, re.DOTALL)\n        if not review_blocks:\n            break\n \
+          \       \n        page_reviews = []\n        for block in review_blocks:\n\
+          \            date_match = re.search(r'(\\d{4}/\\d{1,2}/\\d{1,2})', block)\n\
+          \            rating_match = re.search(r'<span class=\"text-container--2tSUW\
+          \ size-body-1-low--Zmj3x style-bold--1IVlx.*?\">(\\d)</span>', block)\n\
+          \            text_match = re.search(r'<div class=\"review-body--3myhE\"\
+          >(.*?)</div>', block, re.DOTALL)\n            \n            if date_match\
+          \ and rating_match:\n                review_date = date_match.group(1)\n\
+          \                review_date_obj = datetime.strptime(review_date, '%Y/%m/%d')\n\
+          \                \n                page_reviews.append({\n             \
+          \       \"review_date\": review_date,\n                    \"rating\": int(rating_match.group(1)),\n\
+          \                    \"review_text\": text_match.group(1).strip().replace('\\\
+          n', '') if text_match else \"\"\n                })\n                \n\
+          \                # 3ヶ月以前のレビューが見つかったらフラグを立てる\n                if review_date_obj\
+          \ < three_months_ago:\n                    found_old_review = True\n   \
+          \     \n        all_reviews.extend(page_reviews)\n        page_num += 1\n\
+          \        \n        # 安全装置: 最大50ページまで\n        if page_num > 50:\n      \
+          \      break\n    \n    if not all_reviews:\n        return {\n        \
+          \    \"latest_review_date\": \"レビューはありませんでした。\",\n            \"review_count_3months\"\
+          : 0.0,\n            \"average_rating_3months\": 0.0,\n            \"high_rating_reviews\"\
+          : \"\",\n            \"mid_rating_reviews\": \"\",\n            \"low_rating_reviews\"\
+          : \"\",\n        }\n\n    # 最新10件のレビュー日付を取得\n    latest_date_1 = all_reviews[0]['review_date']\
+          \ if len(all_reviews) > 0 else None\n    latest_date_2 = all_reviews[1]['review_date']\
+          \ if len(all_reviews) > 1 else None\n    latest_date_3 = all_reviews[2]['review_date']\
+          \ if len(all_reviews) > 2 else None\n    latest_date_4 = all_reviews[3]['review_date']\
+          \ if len(all_reviews) > 3 else None\n    latest_date_5 = all_reviews[4]['review_date']\
+          \ if len(all_reviews) > 4 else None\n    latest_date_6 = all_reviews[5]['review_date']\
+          \ if len(all_reviews) > 5 else None\n    latest_date_7 = all_reviews[6]['review_date']\
+          \ if len(all_reviews) > 6 else None\n    latest_date_8 = all_reviews[7]['review_date']\
+          \ if len(all_reviews) > 7 else None\n    latest_date_9 = all_reviews[8]['review_date']\
+          \ if len(all_reviews) > 8 else None\n    latest_date_10 = all_reviews[9]['review_date']\
+          \ if len(all_reviews) > 9 else None\n\n    # Noneではない日付のリストを作成\n    latest_dates\
+          \ = [d for d in [latest_date_1, latest_date_2, latest_date_3, latest_date_4,\
+          \ \n                                latest_date_5, latest_date_6, latest_date_7,\
+          \ latest_date_8, \n                                latest_date_9, latest_date_10]\
+          \ if d is not None]\n\n    # 最新日を取得（日付を比較して最大値）\n    if latest_dates:\n\
+          \        latest_date = max(latest_dates, key=lambda x: datetime.strptime(x,\
+          \ '%Y/%m/%d'))\n    else:\n        latest_date = \"日付なし\"\n\n    # 直近3ヶ月のレビューを格納する新しいリスト\n\
+          \    reviews_in_period = []\n    # 90日前の日付を計算\n    three_months_ago = datetime.now()\
+          \ - timedelta(days=90)\n\n    # 全レビューをループして期間内のものだけを絞り込む\n    for review\
+          \ in all_reviews:\n        review_date_obj = datetime.strptime(review['review_date'],\
+          \ '%Y/%m/%d')\n        if review_date_obj >= three_months_ago:\n       \
+          \     reviews_in_period.append(review)\n\n    # 1. レビューを評価別に分類するためのリストを準備\n\
+          \    low_rating_texts = []\n    mid_rating_texts = []\n    high_rating_texts\
+          \ = []\n\n    # 2. 期間内のレビューをループして、評価に応じて各リストに本文を追加\n    for review in reviews_in_period:\n\
+          \        rating = review['rating']\n        text = review['review_text']\n\
+          \        if rating <= 2:\n            low_rating_texts.append(text)\n  \
+          \      elif rating == 3:\n            mid_rating_texts.append(text)\n  \
+          \      else:  # 評価が4か5の場合\n            high_rating_texts.append(text)\n\n\
+          \    # 3. 各リストのレビュー本文を`<br>`で結合して一つの文字列にする\n    low_rating_summary = \"\
+          <br>\".join(low_rating_texts)\n    mid_rating_summary = \"<br>\".join(mid_rating_texts)\n\
+          \    high_rating_summary = \"<br>\".join(high_rating_texts)\n\n    # 絞り込んだ結果から必要な値を計算\n\
+          \    if not reviews_in_period:\n        # 3ヶ月以内のレビューはないが、取得したレビューの中での最新日は返す\n\
+          \        return {\n            \"latest_review_date\": latest_date,\n  \
+          \          \"review_count_3months\": 0.0,\n            \"average_rating_3months\"\
+          : 0.0,\n            \"high_rating_reviews\": \"\",\n            \"mid_rating_reviews\"\
+          : \"\",\n            \"low_rating_reviews\": \"\",\n        }\n    \n  \
+          \  # レビュー数\n    num_reviews = len(reviews_in_period)\n    \n    # レビュー平均値\n\
+          \    total_rating = sum(item['rating'] for item in reviews_in_period)\n\
+          \    average_rating = round(total_rating / num_reviews, 2)\n    \n    return\
+          \ {\n        \"latest_review_date\": latest_date,\n        \"review_count_3months\"\
+          : num_reviews,\n        \"average_rating_3months\": average_rating,\n  \
+          \      \"high_rating_reviews\": high_rating_summary,\n        \"mid_rating_reviews\"\
+          : mid_rating_summary,\n        \"low_rating_reviews\": low_rating_summary\n\
+          \    }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '17576918797740'
+        outputs:
+          average_rating_3months:
+            children: null
+            type: number
+          high_rating_reviews:
+            children: null
+            type: string
+          latest_review_date:
+            children: null
+            type: string
+          low_rating_reviews:
+            children: null
+            type: string
+          mid_rating_reviews:
+            children: null
+            type: string
+          review_count_3months:
+            children: null
+            type: number
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: コード実行 10
+        type: code
+        variables:
+        - value_selector:
+          - '1757289970576'
+          - result
+          value_type: object
+          variable: result
+        - value_selector:
+          - '17576918797740'
+          - nn
+          value_type: number
+          variable: n
+        - value_selector:
+          - '1758348125251'
+          - url
+          value_type: string
+          variable: url
+        - value_selector:
+          - env
+          - chunk_size
+          value_type: number
+          variable: chunk_size
+      height: 81
+      id: '1758367119575'
+      parentId: '17576918797740'
+      position:
+        x: 506
+        y: 117
+      positionAbsolute:
+        x: 5840
+        y: 268
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    viewport:
+      x: -2220.4545250459837
+      y: 313.93319270338384
+      zoom: 0.42425231231806676
+  rag_pipeline_variables: []
