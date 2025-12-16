@@ -33,9 +33,11 @@ class RakutenReviewAnalyzer {
                 return this.getEmptyResult('商品IDが見つかりませんでした。');
             }
             
-            // itemCodeのスラッシュをアンダースコアに置換（レビューページURL用）
+            // itemCodeをレビューページURL用に変換
+            // スラッシュをアンダースコアに置換、コロンもアンダースコアに置換
             // 例: "10001234/567890" -> "10001234_567890"
-            itemId = itemId.replace(/\//g, '_');
+            // 例: "rakutenmobile-store:10001682" -> "rakutenmobile-store_10001682"
+            itemId = itemId.replace(/[\/:]/g, '_');
 
             // レビューデータを取得
             const allReviews = await this.fetchAllReviews(itemId);
@@ -200,7 +202,15 @@ class RakutenReviewAnalyzer {
 
             for (let attempt = 0; attempt <= maxRetries && !success; attempt++) {
                 try {
-                    const reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}?p=${pageNum}&sort=6#itemReviewList`;
+                    // レビューページのURL形式を構築
+                    // 実際の形式: https://review.rakuten.co.jp/item/1/384677_10001682/1.1/?l2-id=item_review
+                    // ページ番号がある場合: ?p={pageNum} を追加
+                    let reviewUrl;
+                    if (pageNum === 1) {
+                        reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}/1.1/?l2-id=item_review`;
+                    } else {
+                        reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}/1.1/?l2-id=item_review&p=${pageNum}`;
+                    }
                     
                     // Vercel FunctionsのプロキシAPIを使用
                     const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(reviewUrl)}`;

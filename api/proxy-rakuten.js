@@ -36,13 +36,25 @@ export default async function handler(req, res) {
       'review.rakuten.co.jp'
     ];
 
-    const urlObj = new URL(url);
+    let urlObj;
+    try {
+      urlObj = new URL(url);
+    } catch (urlError) {
+      console.error('❌ URL解析エラー:', urlError);
+      return res.status(400).json({
+        error: '無効なURL形式です',
+        message: urlError.message,
+        url: url
+      });
+    }
+
     const isAllowed = allowedDomains.some(domain => urlObj.hostname.endsWith(domain));
 
     if (!isAllowed) {
       return res.status(403).json({ 
         error: '許可されていないドメインです',
-        allowedDomains: allowedDomains
+        allowedDomains: allowedDomains,
+        hostname: urlObj.hostname
       });
     }
 
@@ -84,6 +96,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ エラー:', error);
+    console.error('❌ エラー詳細:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     
     // タイムアウトエラーの場合
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {
@@ -93,9 +110,18 @@ export default async function handler(req, res) {
       });
     }
 
+    // URL関連のエラーの場合
+    if (error.message && error.message.includes('Invalid URL')) {
+      return res.status(400).json({
+        error: '無効なURLです',
+        message: error.message
+      });
+    }
+
     return res.status(500).json({
       error: 'サーバーエラーが発生しました',
-      message: error.message
+      message: error.message,
+      name: error.name
     });
   }
 }
