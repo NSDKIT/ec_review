@@ -60,6 +60,12 @@ export default async function handler(req, res) {
 
     // 楽天のページを取得
     console.log('🌐 楽天ページ取得:', url);
+    console.log('🌐 URLオブジェクト:', {
+      href: urlObj.href,
+      hostname: urlObj.hostname,
+      pathname: urlObj.pathname,
+      search: urlObj.search
+    });
 
     // タイムアウトを25秒に設定（VercelのmaxDurationが30秒なので余裕を持たせる）
     const timeoutMs = 25000;
@@ -67,21 +73,41 @@ export default async function handler(req, res) {
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetch(url, {
+      const fetchOptions = {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
           'Referer': 'https://www.rakuten.co.jp/'
         },
-        signal: controller.signal
+        signal: controller.signal,
+        redirect: 'follow', // リダイレクトを自動的にフォロー
+        method: 'GET'
+      };
+      
+      console.log('🌐 Fetchオプション:', {
+        url: url,
+        method: fetchOptions.method,
+        redirect: fetchOptions.redirect,
+        hasSignal: !!fetchOptions.signal,
+        headers: fetchOptions.headers
       });
 
+      const response = await fetch(url, fetchOptions);
+
       clearTimeout(timeoutId);
+
+      // レスポンス情報をログに出力
+      console.log('📥 楽天サーバーからのレスポンス:');
+      console.log('Status:', response.status, response.statusText);
+      console.log('URL:', response.url); // リダイレクト後の最終URL
+      console.log('Redirected:', response.redirected);
+      console.log('Headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'エラーレスポンスの取得に失敗');
         console.error(`❌ 楽天サーバーエラー (${response.status}):`, errorText.substring(0, 500));
+        console.error('エラーレスポンス全文:', errorText);
         throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
       }
 
@@ -99,6 +125,15 @@ export default async function handler(req, res) {
         console.error('❌ HTMLが短すぎます:', html);
         console.error('HTML内容（全文）:', html);
         console.error('HTML内容（JSON形式）:', JSON.stringify(html));
+        console.error('レスポンスURL:', response.url);
+        console.error('リダイレクトされたか:', response.redirected);
+        console.error('ステータスコード:', response.status);
+        
+        // Vercelのエラーレファレンスの可能性を確認
+        if (html.includes('Reference') && html.includes('#')) {
+          console.error('❌ Vercelのエラーレファレンスが返されました。これはVercel Functionsの内部エラーです。');
+        }
+        
         throw new Error(`HTMLが短すぎます (${html.length}文字): ${html.substring(0, 100)}`);
       }
       
@@ -112,6 +147,12 @@ export default async function handler(req, res) {
 
     } catch (fetchError) {
       clearTimeout(timeoutId);
+      console.error('❌ Fetchエラー:', {
+        name: fetchError.name,
+        message: fetchError.message,
+        cause: fetchError.cause,
+        stack: fetchError.stack
+      });
       throw fetchError;
     }
 
