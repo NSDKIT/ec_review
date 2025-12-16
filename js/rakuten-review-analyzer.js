@@ -418,8 +418,18 @@ class RakutenReviewAnalyzer {
                         reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}/1.1/?l2-id=item_review&p=${pageNum}`;
                     }
                     
-                    // Vercel FunctionsのプロキシAPIを使用
-                    const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(reviewUrl)}`;
+                    // Google Apps ScriptまたはVercel FunctionsのプロキシAPIを使用
+                    let proxyUrl;
+                    let useGas = false;
+                    
+                    if (this.gasProxyUrl) {
+                        // Google Apps Scriptを使用
+                        proxyUrl = `${this.gasProxyUrl}?url=${encodeURIComponent(reviewUrl)}&ratItemIdOnly=false`;
+                        useGas = true;
+                    } else {
+                        // Vercel Functionsを使用（フォールバック）
+                        proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(reviewUrl)}`;
+                    }
                     
                     if (attempt > 0) {
                         console.log(`🔄 リトライ ${attempt}/${maxRetries}: ページ${pageNum}`);
@@ -427,6 +437,9 @@ class RakutenReviewAnalyzer {
                         await this.sleep(1000 * attempt);
                     } else {
                         console.log(`📄 レビューページ取得: ページ${pageNum}`);
+                        if (useGas) {
+                            console.log('🔧 Google Apps Scriptを使用してレビューページを取得');
+                        }
                     }
                     
                     // タイムアウト付きfetch
@@ -441,6 +454,20 @@ class RakutenReviewAnalyzer {
                         clearTimeout(timeoutId);
                         
                         if (!response.ok) {
+                            // エラーレスポンスの詳細を取得
+                            let errorText = '';
+                            try {
+                                if (useGas) {
+                                    const errorJson = await response.json();
+                                    errorText = JSON.stringify(errorJson);
+                                } else {
+                                    errorText = await response.text();
+                                }
+                                console.error(`❌ プロキシAPIエラー (${response.status}):`, errorText.substring(0, 500));
+                            } catch (e) {
+                                console.error(`❌ プロキシAPIエラー (${response.status})`);
+                            }
+                            
                             // 504エラーの場合はリトライ
                             if (response.status === 504 && attempt < maxRetries) {
                                 console.warn(`⏱️ タイムアウトエラー (${response.status})、リトライします...`);
@@ -455,7 +482,25 @@ class RakutenReviewAnalyzer {
                             continue;
                         }
 
-                        const html = await response.text();
+                        // GASの場合はJSON、Vercel Functionsの場合はHTML
+                        let html;
+                        if (useGas) {
+                            const contentType = response.headers.get('content-type') || '';
+                            if (contentType.includes('application/json')) {
+                                const jsonData = await response.json();
+                                if (jsonData.error) {
+                                    throw new Error(`GASエラー: ${jsonData.error} - ${jsonData.message || ''}`);
+                                }
+                                html = jsonData.html || '';
+                                if (!html) {
+                                    throw new Error('HTMLが取得できませんでした');
+                                }
+                            } else {
+                                html = await response.text();
+                            }
+                        } else {
+                            html = await response.text();
+                        }
                         const pageReviews = this.parseReviewPage(html);
 
                         if (pageReviews.length === 0) {
