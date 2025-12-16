@@ -25,21 +25,33 @@ class RakutenReviewAnalyzer {
             // itemUrl から ratItemId を抽出する（優先）
             let itemId = null;
             
-            if (itemUrl) {
+            // itemUrl が空文字列や null の場合は、itemCode から商品URLを構築
+            if (!itemUrl || itemUrl.trim() === '') {
+                if (itemCode) {
+                    // itemCode から商品URLを構築
+                    // 例: "rakutenmobile-store:10001518" -> "https://item.rakuten.co.jp/rakutenmobile-store/10001518/"
+                    const codeParts = itemCode.split(':');
+                    if (codeParts.length === 2) {
+                        const shopUrl = codeParts[0];
+                        const itemNumber = codeParts[1];
+                        itemUrl = `https://item.rakuten.co.jp/${shopUrl}/${itemNumber}/`;
+                        console.log('🔗 itemCode から商品URLを構築:', itemUrl);
+                    } else {
+                        console.warn('⚠️ itemCode の形式が不正です:', itemCode);
+                    }
+                }
+            }
+            
+            if (itemUrl && itemUrl.trim() !== '') {
                 // itemUrl から ratItemId を抽出
                 itemId = await this.extractItemId(itemUrl);
             }
             
-            // itemUrl から抽出できなかった場合、itemCode から構築を試みる
-            // ただし、itemCode は "rakutenmobile-store:10001518" のような形式のため、
-            // 直接使用できない（shopId が必要）
-            if (!itemId && itemCode) {
-                console.warn('⚠️ itemCode から ratItemId を構築できません。itemUrl が必要です。', itemCode);
-                // itemCode は使用しない（レビューページURLには使えない）
-            }
-            
             if (!itemId) {
-                return this.getEmptyResult('商品IDが見つかりませんでした。itemUrl が必要です。');
+                const errorMsg = itemUrl 
+                    ? '商品IDが見つかりませんでした。商品ページの取得に失敗した可能性があります。'
+                    : '商品IDが見つかりませんでした。itemUrl または itemCode が必要です。';
+                return this.getEmptyResult(errorMsg);
             }
             
             // ratItemId は既に "shopId_itemId" 形式（例: "384677_10001682"）になっているはず
