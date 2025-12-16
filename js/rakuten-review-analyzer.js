@@ -194,6 +194,12 @@ class RakutenReviewAnalyzer {
                     console.log('HTML（最初の500文字）:', html.substring(0, 500));
                     console.log('HTML（最後の500文字）:', html.substring(Math.max(0, html.length - 500)));
                     
+                    // HTML全文をログに出力（デバッグ用）
+                    console.log('='.repeat(80));
+                    console.log('📄 HTML全文:');
+                    console.log(html);
+                    console.log('='.repeat(80));
+                    
                     // HTMLに特定のキーワードが含まれているか確認
                     const hasRatItemId = html.includes('ratItemId') || html.includes('rat.genericParameter');
                     const hasItemInfo = html.includes('itemInfoSku') || html.includes('shopId');

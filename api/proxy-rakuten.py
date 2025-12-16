@@ -166,6 +166,12 @@ def handler(req):
             print(f'HTML（最初の500文字）: {html[:500]}')
             print(f'HTML（最後の500文字）: {html[-500:]}')
             
+            # HTML全文をログに出力（デバッグ用）
+            print('=' * 80)
+            print('📄 HTML全文:')
+            print(html)
+            print('=' * 80)
+            
             # HTMLを返す
             return {
                 'statusCode': 200,
