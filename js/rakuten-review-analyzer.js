@@ -39,9 +39,10 @@ class RakutenReviewAnalyzer {
      * 商品URLまたはitemCodeからレビューデータを取得
      * @param {string} itemUrl - 商品URL（オプション、itemCodeが提供されている場合は不要）
      * @param {string} itemCode - 商品コード（楽天APIの検索結果から取得可能）
+     * @param {Function} progressCallback - 進行状況を更新するコールバック関数 (progress, message)
      * @returns {Promise<Object>} レビュー分析結果
      */
-    async analyzeReviews(itemUrl, itemCode = null) {
+    async analyzeReviews(itemUrl, itemCode = null, progressCallback = null) {
         try {
             // レビューページURLには ratItemId (shopId_itemId 形式) が必要
             // itemUrl から ratItemId を抽出する（優先）
@@ -66,13 +67,15 @@ class RakutenReviewAnalyzer {
             
             if (itemUrl && itemUrl.trim() !== '') {
                 // itemUrl から ratItemId を抽出
-                itemId = await this.extractItemId(itemUrl);
+                if (progressCallback) progressCallback(10, '商品ページから商品IDを抽出中...');
+                itemId = await this.extractItemId(itemUrl, progressCallback);
             }
             
             if (!itemId) {
                 const errorMsg = itemUrl 
                     ? '商品IDが見つかりませんでした。商品ページの取得に失敗した可能性があります。'
                     : '商品IDが見つかりませんでした。itemUrl または itemCode が必要です。';
+                if (progressCallback) progressCallback(100, errorMsg);
                 return this.getEmptyResult(errorMsg);
             }
             
@@ -81,13 +84,15 @@ class RakutenReviewAnalyzer {
             itemId = itemId.replace(/\//g, '_');
 
             // レビューデータを取得
-            const allReviews = await this.fetchAllReviews(itemId);
+            if (progressCallback) progressCallback(30, 'レビューページを取得中...');
+            const allReviews = await this.fetchAllReviews(itemId, progressCallback);
             
             if (allReviews.length === 0) {
                 return this.getEmptyResult('レビューはありませんでした。');
             }
 
             // 最新10件の日付を取得
+            if (progressCallback) progressCallback(95, 'レビューデータを分析中...');
             const latestDate = this.getLatestReviewDate(allReviews);
 
             // 直近3ヶ月のレビューを分析
@@ -104,6 +109,8 @@ class RakutenReviewAnalyzer {
 
             // 統計を計算
             const stats = this.calculateStats(reviewsInPeriod);
+
+            if (progressCallback) progressCallback(100, `レビュー分析完了: 直近3ヶ月のレビュー${reviewsInPeriod.length}件を分析`);
 
             return {
                 latest_review_date: latestDate,
@@ -123,8 +130,10 @@ class RakutenReviewAnalyzer {
     /**
      * 商品IDを抽出（商品URLから）
      * Vercel Functions経由で楽天ページを取得
+     * @param {string} itemUrl - 商品URL
+     * @param {Function} progressCallback - 進行状況を更新するコールバック関数 (progress, message)
      */
-    async extractItemId(itemUrl) {
+    async extractItemId(itemUrl, progressCallback = null) {
         const maxRetries = 2;
         const timeoutMs = 30000; // 30秒
 
@@ -150,7 +159,7 @@ class RakutenReviewAnalyzer {
                     // リトライ前に少し待機
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                 } else {
-                    console.log('🌐 商品ページ取得:', itemUrl);
+            console.log('🌐 商品ページ取得:', itemUrl);
                 }
                 
                 // タイムアウト付きfetch
@@ -167,8 +176,8 @@ class RakutenReviewAnalyzer {
                     // レスポンスのContent-Typeを確認
                     const contentType = response.headers.get('content-type') || '';
                     const isJson = contentType.includes('application/json');
-                    
-                    if (!response.ok) {
+            
+            if (!response.ok) {
                         // エラーレスポンスの内容を取得
                         let errorText;
                         if (isJson) {
@@ -190,9 +199,9 @@ class RakutenReviewAnalyzer {
                         }
                         
                         // その他のエラーまたはリトライ上限に達した場合、フォールバック
-                        console.warn('プロキシAPIエラー、フォールバック使用');
-                        return this.extractItemIdFromUrl(itemUrl);
-                    }
+                console.warn('プロキシAPIエラー、フォールバック使用');
+                return this.extractItemIdFromUrl(itemUrl);
+            }
 
                     // GASの場合はJSON、Vercel Functionsの場合はHTML
                     let html;
@@ -332,16 +341,16 @@ class RakutenReviewAnalyzer {
                     }
                     
                     // 方法2: HTML内の ratItemId を正規表現で抽出（従来の方法）
-                    const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
-                    
-                    if (match && match[1]) {
-                        const itemId = match[1].replace(/\//g, '_');
+            const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
+            
+            if (match && match[1]) {
+                const itemId = match[1].replace(/\//g, '_');
                         console.log('✅ 正規表現で商品ID抽出成功:', itemId);
-                        return itemId;
-                    }
+                return itemId;
+            }
 
-                    console.warn('商品IDが見つからず、フォールバック使用');
-                    return this.extractItemIdFromUrl(itemUrl);
+            console.warn('商品IDが見つからず、フォールバック使用');
+            return this.extractItemIdFromUrl(itemUrl);
 
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
@@ -355,13 +364,13 @@ class RakutenReviewAnalyzer {
                     throw fetchError;
                 }
 
-            } catch (error) {
+        } catch (error) {
                 // 最後の試行でもエラーが発生した場合、フォールバック
                 if (attempt >= maxRetries) {
-                    console.warn('商品ID抽出エラー（フォールバック使用）:', error);
-                    return this.extractItemIdFromUrl(itemUrl);
+            console.warn('商品ID抽出エラー（フォールバック使用）:', error);
+            return this.extractItemIdFromUrl(itemUrl);
                 }
-            }
+        }
         }
         
         // すべてのリトライが失敗した場合、フォールバック
@@ -393,8 +402,10 @@ class RakutenReviewAnalyzer {
     /**
      * 全レビューデータを取得
      * Vercel Functions経由でレビューページを取得
+     * @param {string} itemId - 商品ID（ratItemId）
+     * @param {Function} progressCallback - 進行状況を更新するコールバック関数 (progress, message)
      */
-    async fetchAllReviews(itemId) {
+    async fetchAllReviews(itemId, progressCallback = null) {
         const allReviews = [];
         let pageNum = 1;
         const threeMonthsAgo = new Date();
@@ -433,10 +444,22 @@ class RakutenReviewAnalyzer {
                     
                     if (attempt > 0) {
                         console.log(`🔄 リトライ ${attempt}/${maxRetries}: ページ${pageNum}`);
+                        if (progressCallback) {
+                            progressCallback(
+                                30 + Math.floor((pageNum / this.maxPages) * 60),
+                                `レビューページ取得リトライ中: ページ${pageNum} (${attempt}/${maxRetries})`
+                            );
+                        }
                         // リトライ前に少し待機
                         await this.sleep(1000 * attempt);
                     } else {
-                        console.log(`📄 レビューページ取得: ページ${pageNum}`);
+                console.log(`📄 レビューページ取得: ページ${pageNum}`);
+                        if (progressCallback) {
+                            progressCallback(
+                                30 + Math.floor((pageNum / this.maxPages) * 60),
+                                `レビューページ取得中: ページ${pageNum} (${allReviews.length}件のレビューを取得済み)`
+                            );
+                        }
                         if (useGas) {
                             console.log('🔧 Google Apps Scriptを使用してレビューページを取得');
                         }
@@ -452,8 +475,8 @@ class RakutenReviewAnalyzer {
                         });
                         
                         clearTimeout(timeoutId);
-                        
-                        if (!response.ok) {
+                
+                if (!response.ok) {
                             // エラーレスポンスの詳細を取得
                             let errorText = '';
                             try {
@@ -476,7 +499,7 @@ class RakutenReviewAnalyzer {
                             
                             // その他のエラーまたはリトライ上限に達した場合
                             if (attempt >= maxRetries) {
-                                console.warn(`ページ${pageNum}の取得失敗: ${response.status}`);
+                    console.warn(`ページ${pageNum}の取得失敗: ${response.status}`);
                                 break; // ループを抜ける
                             }
                             continue;
@@ -501,33 +524,45 @@ class RakutenReviewAnalyzer {
                         } else {
                             html = await response.text();
                         }
-                        const pageReviews = this.parseReviewPage(html);
+                const pageReviews = this.parseReviewPage(html);
 
-                        if (pageReviews.length === 0) {
-                            console.log(`ページ${pageNum}: レビューなし、終了`);
-                            foundOldReview = true; // ループを終了させる
-                            success = true;
-                            break;
+                if (pageReviews.length === 0) {
+                    console.log(`ページ${pageNum}: レビューなし、終了`);
+                    if (progressCallback) {
+                        progressCallback(90, `レビュー解析完了: ${allReviews.length}件のレビューを取得`);
+                    }
+                    foundOldReview = true; // ループを終了させる
+                    success = true;
+                    break;
+                }
+
+                console.log(`ページ${pageNum}: ${pageReviews.length}件のレビューを取得`);
+
+                // 3ヶ月以前のレビューが見つかったかチェック
+                for (const review of pageReviews) {
+                    const reviewDate = new Date(review.review_date);
+                    if (reviewDate < threeMonthsAgo) {
+                        foundOldReview = true;
+                        console.log('3ヶ月以前のレビューを発見、取得終了');
+                        if (progressCallback) {
+                            progressCallback(90, `3ヶ月以前のレビューを発見、取得終了 (${allReviews.length + pageReviews.length}件取得)`);
                         }
+                        break;
+                    }
+                }
 
-                        console.log(`ページ${pageNum}: ${pageReviews.length}件のレビューを取得`);
+                allReviews.push(...pageReviews);
+                pageNum++;
+                success = true;
 
-                        // 3ヶ月以前のレビューが見つかったかチェック
-                        for (const review of pageReviews) {
-                            const reviewDate = new Date(review.review_date);
-                            if (reviewDate < threeMonthsAgo) {
-                                foundOldReview = true;
-                                console.log('3ヶ月以前のレビューを発見、取得終了');
-                                break;
-                            }
-                        }
+                // 進行状況を更新
+                if (progressCallback) {
+                    const progress = 30 + Math.floor((pageNum / this.maxPages) * 60);
+                    progressCallback(progress, `レビュー取得中: ページ${pageNum} (合計${allReviews.length}件)`);
+                }
 
-                        allReviews.push(...pageReviews);
-                        pageNum++;
-                        success = true;
-
-                        // レート制限を考慮して少し待機
-                        await this.sleep(500);
+                // レート制限を考慮して少し待機
+                await this.sleep(500);
 
                     } catch (fetchError) {
                         clearTimeout(timeoutId);
@@ -544,30 +579,53 @@ class RakutenReviewAnalyzer {
                         }
                     }
 
-                } catch (error) {
+            } catch (error) {
                     // 最後の試行でもエラーが発生した場合
                     if (attempt >= maxRetries) {
-                        console.error(`ページ${pageNum}の取得エラー:`, error);
+                console.error(`ページ${pageNum}の取得エラー:`, error);
+                        if (progressCallback) {
+                            progressCallback(
+                                30 + Math.floor((pageNum / this.maxPages) * 60),
+                                `ページ${pageNum}の取得エラー: ${error.message}`
+                            );
+                        }
                         // エラーが発生しても次のページに進む（breakしない）
                         pageNum++;
                         break; // リトライループを抜ける
                     }
                 }
             }
+        
+        // レビュー取得完了
+        if (progressCallback) {
+            progressCallback(90, `レビュー取得完了: 合計${allReviews.length}件のレビューを取得`);
+        }
 
             // リトライがすべて失敗した場合、次のページに進むか終了
             if (!success) {
                 console.warn(`ページ${pageNum}の取得に失敗しました。次のページに進みます。`);
+                if (progressCallback) {
+                    progressCallback(
+                        30 + Math.floor((pageNum / this.maxPages) * 60),
+                        `ページ${pageNum}の取得に失敗、次のページに進みます`
+                    );
+                }
                 pageNum++;
                 // 連続で失敗した場合は終了
                 if (pageNum > 3 && allReviews.length === 0) {
                     console.warn('複数ページで取得失敗、処理を終了します');
-                    break;
+                    if (progressCallback) {
+                        progressCallback(90, '複数ページで取得失敗、処理を終了します');
+                    }
+                break;
                 }
             }
         }
 
         console.log(`✅ 合計${allReviews.length}件のレビューを取得`);
+        if (progressCallback && allReviews.length > 0) {
+            progressCallback(90, `レビュー取得完了: 合計${allReviews.length}件のレビューを取得`);
+        }
         return allReviews;
     }
 
