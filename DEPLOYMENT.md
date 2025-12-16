@@ -35,30 +35,35 @@ git push -u origin main
 4. GitHubリポジトリを選択
 5. プロジェクト設定:
    - **Framework Preset**: Other
-   - **Root Directory**: ./
-   - **Build Command**: （空欄）
-   - **Output Directory**: （空欄）
+   - **Root Directory**: `./`（デフォルト）
+   - **Build Command**: `npm run build`（自動検出されるはず）
+   - **Output Directory**: `public`（自動検出されるはず）
 6. 「Deploy」をクリック
 
-#### ステップ3: 環境変数を設定
+#### ステップ3: 楽天アプリIDの設定
+
+**楽天アプリIDはWebアプリの設定画面で入力します。** 環境変数の設定は不要です。
+
+1. デプロイが完了したら、Webアプリにアクセス
+2. 設定画面（⚙️アイコン）を開く
+3. 「楽天アプリID」欄に入力（デフォルト値: `1011800059095379100`）
+4. 保存すると、以降の検索で使用されます
+
+#### ステップ4: 環境変数を設定（オプション）
+
+Google Sheets書き込み機能を使用する場合のみ必要:
 
 1. プロジェクトの「Settings」→「Environment Variables」
 2. 以下の環境変数を追加:
 
 ```
-RAKUTEN_APP_ID=1011800059095379100
-```
-
-3. （オプション）Google Sheets書き込みを使用する場合:
-
-```
 GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ```
 
-4. 「Save」をクリック
-5. 「Redeploy」をクリック（環境変数を反映）
+3. 「Save」をクリック
+4. 「Deployments」タブで「Redeploy」をクリック（環境変数を反映）
 
-#### ステップ4: 動作確認
+#### ステップ5: 動作確認
 
 デプロイが完了したら、以下のURLでAPIをテスト:
 
@@ -70,17 +75,22 @@ https://your-project.vercel.app/api/rakuten-search
 
 ## 📝 環境変数の詳細
 
-### 必須環境変数
+### 楽天アプリIDについて
 
-| 変数名 | 説明 | 例 |
-|--------|------|-----|
-| `RAKUTEN_APP_ID` | 楽天アプリID | `1011800059095379100` |
+**楽天アプリIDはWebアプリの設定画面で入力します。** 環境変数の設定は不要です。
+
+- デプロイ後、Webアプリにアクセス
+- 設定画面（⚙️アイコン）を開く
+- 「楽天アプリID」欄に入力（デフォルト値: `1011800059095379100`）
+- 保存すると、`localStorage` に保存され、以降の検索で使用されます
 
 ### オプション環境変数
 
 | 変数名 | 説明 | 例 |
 |--------|------|-----|
 | `GOOGLE_APPS_SCRIPT_WRITE_URL` | Google Apps ScriptのWebアプリURL（Google Sheets書き込み用） | `https://script.google.com/macros/s/.../exec` |
+
+**注意**: Google Sheets書き込み機能を使用する場合のみ設定が必要です。
 
 ---
 
@@ -159,12 +169,13 @@ vercel dev
 
 ### 環境変数の設定（ローカル）
 
-`.env.local` ファイルを作成:
+Google Sheets書き込み機能を使用する場合のみ、`.env.local` ファイルを作成:
 
 ```env
-RAKUTEN_APP_ID=1011800059095379100
 GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ```
+
+**注意**: 楽天アプリIDはWebアプリの設定画面で入力します。
 
 ---
 
@@ -293,9 +304,10 @@ const html = await response.text();
 - [ ] GitHubにコードをプッシュ
 - [ ] Vercelアカウントを作成
 - [ ] プロジェクトをVercelにインポート
-- [ ] 環境変数を設定（RAKUTEN_APP_ID）
-- [ ] Google Apps Scriptを設定（オプション）
 - [ ] デプロイを実行
+- [ ] Webアプリで楽天アプリIDを設定（設定画面から）
+- [ ] Google Apps Scriptを設定（オプション、Google Sheets書き込み機能を使用する場合）
+- [ ] 環境変数を設定（GOOGLE_APPS_SCRIPT_WRITE_URL、オプション）
 - [ ] APIエンドポイントをテスト
 - [ ] フロントエンドからAPIを呼び出して動作確認
 

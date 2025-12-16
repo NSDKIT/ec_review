@@ -32,21 +32,17 @@ git push -u origin main
 3. GitHubリポジトリを選択
 4. プロジェクト設定:
    - **Framework Preset**: Other
-   - **Root Directory**: ./
-   - **Build Command**: （空欄）
-   - **Output Directory**: （空欄）
+   - **Root Directory**: `./`（デフォルト）
+   - **Build Command**: `npm run build`（自動検出されるはず）
+   - **Output Directory**: `public`（自動検出されるはず）
 
-### 4. 環境変数を設定
+### 4. 環境変数を設定（オプション）
 
-Vercelダッシュボードで以下の環境変数を設定:
+**注意**: 楽天アプリIDはWebアプリの設定画面で入力するため、環境変数の設定は不要です。
 
-#### 必須環境変数
+#### オプション環境変数（Google Sheets書き込み機能を使用する場合のみ）
 
-```
-RAKUTEN_APP_ID=1011800059095379100
-```
-
-#### オプション環境変数（Google Sheets書き込み用）
+Google Sheets書き込み機能を使用する場合のみ、以下の環境変数を設定:
 
 ```
 GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
@@ -56,6 +52,7 @@ GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/e
 1. プロジェクトの「Settings」→「Environment Variables」
 2. 変数名と値を入力
 3. 「Save」をクリック
+4. 「Deployments」タブで「Redeploy」をクリック（環境変数を反映）
 
 ### 5. デプロイ
 
@@ -67,16 +64,26 @@ GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/e
 
 ## 📝 環境変数の設定
 
-### ローカル開発環境
+### 楽天アプリIDについて
+
+**楽天アプリIDはWebアプリの設定画面で入力します。** 環境変数の設定は不要です。
+
+1. デプロイ後、Webアプリにアクセス
+2. 設定画面（⚙️アイコン）を開く
+3. 「楽天アプリID」欄に入力（デフォルト値: `1011800059095379100`）
+4. 保存すると、`localStorage` に保存され、以降の検索で使用されます
+
+### Google Sheets書き込み機能を使用する場合
+
+#### ローカル開発環境
 
 `.env.local` ファイルを作成（Gitにコミットしない）:
 
 ```env
-RAKUTEN_APP_ID=1011800059095379100
 GOOGLE_APPS_SCRIPT_WRITE_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ```
 
-### Vercel環境
+#### Vercel環境
 
 Vercelダッシュボードで設定（上記参照）
 
@@ -255,9 +262,10 @@ GET https://your-project.vercel.app/api/proxy-rakuten?url=https://item.rakuten.c
 - [ ] GitHubにコードをプッシュ
 - [ ] Vercelアカウントを作成
 - [ ] プロジェクトをVercelにインポート
-- [ ] 環境変数を設定（RAKUTEN_APP_ID）
-- [ ] Google Apps Scriptを設定（オプション）
 - [ ] デプロイを実行
+- [ ] Webアプリで楽天アプリIDを設定（設定画面から）
+- [ ] Google Apps Scriptを設定（オプション、Google Sheets書き込み機能を使用する場合）
+- [ ] 環境変数を設定（GOOGLE_APPS_SCRIPT_WRITE_URL、オプション）
 - [ ] APIエンドポイントをテスト
 
 ---
