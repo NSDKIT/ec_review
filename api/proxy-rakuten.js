@@ -87,11 +87,24 @@ export default async function handler(req, res) {
 
       const html = await response.text();
       
+      // ログ出力
+      console.log('📄 楽天サーバーからのレスポンス:');
+      console.log('HTML長:', html.length, '文字');
+      console.log('Content-Type:', response.headers.get('content-type'));
+      console.log('Content-Length:', response.headers.get('content-length'));
+      console.log('Status:', response.status, response.statusText);
+      
       // HTMLが短すぎる場合はエラー
       if (html.length < 100) {
         console.error('❌ HTMLが短すぎます:', html);
+        console.error('HTML内容（全文）:', html);
+        console.error('HTML内容（JSON形式）:', JSON.stringify(html));
         throw new Error(`HTMLが短すぎます (${html.length}文字): ${html.substring(0, 100)}`);
       }
+      
+      // HTMLの最初と最後をログに出力
+      console.log('HTML（最初の500文字）:', html.substring(0, 500));
+      console.log('HTML（最後の500文字）:', html.substring(Math.max(0, html.length - 500)));
 
       // HTMLを返す
       res.setHeader('Content-Type', 'text/html; charset=utf-8');

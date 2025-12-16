@@ -166,11 +166,22 @@ class RakutenReviewAnalyzer {
                     console.log('📄 取得された商品ページのHTML:');
                     console.log('HTML長:', html.length, '文字');
                     console.log('レスポンスステータス:', response.status);
+                    console.log('Content-Type:', response.headers.get('content-type'));
+                    console.log('Content-Length:', response.headers.get('content-length'));
                     
                     // HTMLが短すぎる場合はエラー
                     if (html.length < 100) {
                         console.error('❌ HTMLが短すぎます。エラーページの可能性があります。');
-                        console.error('HTML内容:', html);
+                        console.error('HTML内容（全文）:', html);
+                        console.error('HTML内容（JSON形式）:', JSON.stringify(html));
+                        
+                        // プロキシAPIのエラーレスポンスの可能性を確認
+                        try {
+                            const jsonData = JSON.parse(html);
+                            console.error('❌ プロキシAPIからJSONエラーレスポンス:', jsonData);
+                        } catch (e) {
+                            // JSONではない場合は、そのまま表示
+                        }
                         
                         if (attempt < maxRetries) {
                             console.warn('リトライします...');
@@ -179,7 +190,15 @@ class RakutenReviewAnalyzer {
                         return this.extractItemIdFromUrl(itemUrl);
                     }
                     
-                    console.log('HTML（最初の10000文字）:', html.substring(0, 10000));
+                    // HTMLの最初と最後を表示
+                    console.log('HTML（最初の500文字）:', html.substring(0, 500));
+                    console.log('HTML（最後の500文字）:', html.substring(Math.max(0, html.length - 500)));
+                    
+                    // HTMLに特定のキーワードが含まれているか確認
+                    const hasRatItemId = html.includes('ratItemId') || html.includes('rat.genericParameter');
+                    const hasItemInfo = html.includes('itemInfoSku') || html.includes('shopId');
+                    console.log('HTMLにratItemIdが含まれている:', hasRatItemId);
+                    console.log('HTMLにitemInfoが含まれている:', hasItemInfo);
                     
                     // 方法1: HTML内のJSONデータから ratItemId を抽出
                     // パターン1: window.__INITIAL_STATE__ 形式
