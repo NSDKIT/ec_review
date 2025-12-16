@@ -49,7 +49,11 @@ function doGet(e) {
     const urlObj = new URL(url);
     const cleanUrl = urlObj.origin + urlObj.pathname;
     
+    Logger.log('🌐 楽天ページ取得: ' + url);
+    Logger.log('🌐 クリーンURL: ' + cleanUrl);
+    
     // 楽天のページを取得
+    Logger.log('🚀 HTTPリクエスト送信開始: ' + cleanUrl);
     const response = UrlFetchApp.fetch(cleanUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -63,21 +67,32 @@ function doGet(e) {
       muteHttpExceptions: true
     });
     
-    if (response.getResponseCode() !== 200) {
+    const statusCode = response.getResponseCode();
+    Logger.log('📥 楽天サーバーからのレスポンス:');
+    Logger.log('Status: ' + statusCode);
+    Logger.log('Content-Length: ' + response.getHeaders()['Content-Length']);
+    
+    if (statusCode !== 200) {
+      const errorText = response.getContentText().substring(0, 500);
+      Logger.log('❌ 楽天サーバーエラー: ' + errorText);
       return ContentService.createTextOutput(JSON.stringify({
-        error: `HTTPエラー: ${response.getResponseCode()}`,
-        message: response.getContentText().substring(0, 200)
+        error: `HTTPエラー: ${statusCode}`,
+        message: errorText
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
     const html = response.getContentText();
+    Logger.log('📄 HTML取得完了: ' + html.length + ' 文字');
+    Logger.log('HTML（最初の500文字）: ' + html.substring(0, 500));
     
     // HTMLが短すぎる場合はエラー（ボット検出された可能性）
     if (html.length < 100) {
+      Logger.log('❌ HTMLが短すぎます: ' + html);
       return ContentService.createTextOutput(JSON.stringify({
         error: 'HTMLが短すぎます（ボット検出の可能性）',
         html: html,
-        length: html.length
+        length: html.length,
+        url: cleanUrl
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -108,14 +123,20 @@ function doGet(e) {
       const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
       if (match && match[1]) {
         ratItemId = match[1].replace(/\//g, '_');
+        Logger.log('✅ 正規表現でratItemId抽出: ' + ratItemId);
       }
     }
+    
+    Logger.log('📊 抽出結果:');
+    Logger.log('ratItemId: ' + (ratItemId || 'null'));
+    Logger.log('HTML長: ' + html.length);
     
     // レスポンス形式を決定（ratItemIdOnlyパラメータがある場合は商品IDのみ返す）
     const returnItemIdOnly = e.parameter.ratItemIdOnly === 'true';
     
     if (returnItemIdOnly) {
       // 商品IDのみを返す
+      Logger.log('📤 商品IDのみを返す');
       return ContentService.createTextOutput(JSON.stringify({
         success: !!ratItemId,
         ratItemId: ratItemId,
@@ -123,6 +144,7 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     } else {
       // HTMLと商品IDの両方を返す
+      Logger.log('📤 HTMLと商品IDの両方を返す（HTML長: ' + html.length + '）');
       return ContentService.createTextOutput(JSON.stringify({
         html: html,
         ratItemId: ratItemId,

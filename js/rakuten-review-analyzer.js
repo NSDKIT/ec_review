@@ -201,14 +201,32 @@ class RakutenReviewAnalyzer {
                     if (useGas) {
                         // Google Apps Scriptからのレスポンス（JSON形式）
                         const contentType = response.headers.get('content-type') || '';
+                        console.log('📥 GASレスポンスContent-Type:', contentType);
+                        console.log('📥 GASレスポンスStatus:', response.status);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text().catch(() => 'エラーレスポンスの取得に失敗');
+                            console.error('❌ GASエラー:', errorText);
+                            throw new Error(`GASエラー: ${response.status} - ${errorText}`);
+                        }
+                        
                         if (contentType.includes('application/json')) {
                             const jsonData = await response.json();
+                            console.log('📄 Google Apps Scriptからのレスポンス（JSON）:', jsonData);
+                            
+                            // エラーチェック
+                            if (jsonData.error) {
+                                console.error('❌ GASエラー:', jsonData.error);
+                                throw new Error(`GASエラー: ${jsonData.error} - ${jsonData.message || ''}`);
+                            }
+                            
                             html = jsonData.html || '';
                             extractedRatItemId = jsonData.ratItemId || null;
                             
                             console.log('📄 Google Apps Scriptからのレスポンス:');
                             console.log('HTML長:', html ? html.length : 0, '文字');
                             console.log('抽出されたratItemId:', extractedRatItemId);
+                            console.log('htmlLength:', jsonData.htmlLength);
                             
                             if (!html && extractedRatItemId) {
                                 // 商品IDのみが取得できた場合
@@ -217,10 +235,13 @@ class RakutenReviewAnalyzer {
                             }
                             
                             if (!html) {
+                                console.error('❌ HTMLが取得できませんでした。レスポンス:', jsonData);
                                 throw new Error('HTMLが取得できませんでした');
                             }
                         } else {
+                            // JSON以外の場合はテキストとして取得
                             html = await response.text();
+                            console.log('📄 GASレスポンス（テキスト）:', html.substring(0, 500));
                         }
                     } else {
                         // Vercel Functionsからのレスポンス（HTML形式）
