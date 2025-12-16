@@ -28,26 +28,44 @@ function doGet(e) {
       'review.rakuten.co.jp'
     ];
     
+    // URLを手動でパース（GASではURLオブジェクトが使えない）
+    let hostname = '';
+    let pathname = '';
+    let cleanUrl = '';
+    
     try {
-      const urlObj = new URL(url);
-      const isAllowed = allowedDomains.some(domain => urlObj.hostname.endsWith(domain));
+      // URLをパース
+      const urlMatch = url.match(/https?:\/\/([^\/]+)(\/.*)?/);
+      if (!urlMatch) {
+        throw new Error('URL形式が不正です');
+      }
+      
+      hostname = urlMatch[1];
+      pathname = urlMatch[2] || '/';
+      
+      // ドメインの検証
+      const isAllowed = allowedDomains.some(domain => hostname.endsWith(domain));
       
       if (!isAllowed) {
         return ContentService.createTextOutput(JSON.stringify({
           error: '許可されていないドメインです',
-          allowedDomains: allowedDomains
+          allowedDomains: allowedDomains,
+          hostname: hostname
         })).setMimeType(ContentService.MimeType.JSON);
       }
+      
+      // URLからクエリパラメータを削除（rafcidなどがボット検出を引き起こす可能性がある）
+      const scheme = url.startsWith('https://') ? 'https://' : 'http://';
+      cleanUrl = scheme + hostname + pathname;
+      
     } catch (urlError) {
+      Logger.log('❌ URL解析エラー: ' + urlError.toString());
       return ContentService.createTextOutput(JSON.stringify({
         error: '無効なURLです',
-        message: urlError.toString()
+        message: urlError.toString(),
+        url: url
       })).setMimeType(ContentService.MimeType.JSON);
     }
-    
-    // URLからクエリパラメータを削除（rafcidなどがボット検出を引き起こす可能性がある）
-    const urlObj = new URL(url);
-    const cleanUrl = urlObj.origin + urlObj.pathname;
     
     Logger.log('🌐 楽天ページ取得: ' + url);
     Logger.log('🌐 クリーンURL: ' + cleanUrl);
