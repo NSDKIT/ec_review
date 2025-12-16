@@ -82,12 +82,19 @@ class handler(BaseHTTPRequestHandler):
             print(f'🌐 楽天ページ取得: {url}')
             print(f'🌐 URLオブジェクト: {url_obj.hostname}, {url_obj.path}')
             
+            # URLからクエリパラメータ（特にrafcid）を削除して、シンプルなURLにする
+            # rafcidパラメータがボット検出を引き起こす可能性がある
+            clean_url = f"{url_obj.scheme}://{url_obj.netloc}{url_obj.path}"
+            if url_obj.path.endswith('/'):
+                clean_url = clean_url.rstrip('/')
+            print(f'🌐 クリーンURL（クエリパラメータ削除）: {clean_url}')
+            
             # タイムアウトを25秒に設定（VercelのmaxDurationが60秒なので余裕を持たせる）
             timeout_seconds = 25
             
             try:
                 # HTTPリクエストを送信
-                print(f'🚀 HTTPリクエスト送信開始: {url}')
+                print(f'🚀 HTTPリクエスト送信開始: {clean_url}')
                 import time
                 # ボット検出を避けるために少し待機
                 time.sleep(0.5)
@@ -114,7 +121,7 @@ class handler(BaseHTTPRequestHandler):
                 session.headers.update(headers)
                 
                 response = session.get(
-                    url,
+                    clean_url,
                     timeout=timeout_seconds,
                     allow_redirects=True
                 )
