@@ -247,7 +247,8 @@ class RakutenWorkflow {
             try {
                 console.log(`  📊 商品${i + 1}/${maxReviewAnalysis}: ${product.item_name.substring(0, 30)}...`);
 
-                const reviewData = await rakutenReviewAnalyzer.analyzeReviews(product.item_url);
+                // item_codeを直接使用（HTMLから抽出する必要がない）
+                const reviewData = await rakutenReviewAnalyzer.analyzeReviews(product.item_url, product.item_code);
 
                 // Google Sheetsにレビューデータを書き込み
                 await this.writeReviewData(i + 2, reviewData);

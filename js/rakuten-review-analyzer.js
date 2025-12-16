@@ -14,18 +14,28 @@ class RakutenReviewAnalyzer {
     }
 
     /**
-     * 商品URLからレビューデータを取得
-     * @param {string} itemUrl - 商品URL
+     * 商品URLまたはitemCodeからレビューデータを取得
+     * @param {string} itemUrl - 商品URL（オプション、itemCodeが提供されている場合は不要）
+     * @param {string} itemCode - 商品コード（楽天APIの検索結果から取得可能）
      * @returns {Promise<Object>} レビュー分析結果
      */
-    async analyzeReviews(itemUrl) {
+    async analyzeReviews(itemUrl, itemCode = null) {
         try {
-            // 商品IDを抽出
-            const itemId = await this.extractItemId(itemUrl);
+            // itemCodeが提供されている場合は直接使用
+            let itemId = itemCode;
+            
+            // itemCodeがない場合のみ、URLから抽出を試みる
+            if (!itemId && itemUrl) {
+                itemId = await this.extractItemId(itemUrl);
+            }
             
             if (!itemId) {
                 return this.getEmptyResult('商品IDが見つかりませんでした。');
             }
+            
+            // itemCodeのスラッシュをアンダースコアに置換（レビューページURL用）
+            // 例: "10001234/567890" -> "10001234_567890"
+            itemId = itemId.replace(/\//g, '_');
 
             // レビューデータを取得
             const allReviews = await this.fetchAllReviews(itemId);
@@ -184,50 +194,115 @@ class RakutenReviewAnalyzer {
         let foundOldReview = false;
 
         while (!foundOldReview && pageNum <= this.maxPages) {
-            try {
-                const reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}?p=${pageNum}&sort=6#itemReviewList`;
-                
-                // Vercel FunctionsのプロキシAPIを使用
-                const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(reviewUrl)}`;
-                
-                console.log(`📄 レビューページ取得: ページ${pageNum}`);
-                
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    console.warn(`ページ${pageNum}の取得失敗: ${response.status}`);
-                    break;
-                }
+            const maxRetries = 2;
+            const timeoutMs = 30000; // 30秒
+            let success = false;
 
-                const html = await response.text();
-                const pageReviews = this.parseReviewPage(html);
+            for (let attempt = 0; attempt <= maxRetries && !success; attempt++) {
+                try {
+                    const reviewUrl = `https://review.rakuten.co.jp/item/1/${itemId}?p=${pageNum}&sort=6#itemReviewList`;
+                    
+                    // Vercel FunctionsのプロキシAPIを使用
+                    const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(reviewUrl)}`;
+                    
+                    if (attempt > 0) {
+                        console.log(`🔄 リトライ ${attempt}/${maxRetries}: ページ${pageNum}`);
+                        // リトライ前に少し待機
+                        await this.sleep(1000 * attempt);
+                    } else {
+                        console.log(`📄 レビューページ取得: ページ${pageNum}`);
+                    }
+                    
+                    // タイムアウト付きfetch
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                    
+                    try {
+                        const response = await fetch(proxyUrl, {
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (!response.ok) {
+                            // 504エラーの場合はリトライ
+                            if (response.status === 504 && attempt < maxRetries) {
+                                console.warn(`⏱️ タイムアウトエラー (${response.status})、リトライします...`);
+                                continue;
+                            }
+                            
+                            // その他のエラーまたはリトライ上限に達した場合
+                            if (attempt >= maxRetries) {
+                                console.warn(`ページ${pageNum}の取得失敗: ${response.status}`);
+                                break; // ループを抜ける
+                            }
+                            continue;
+                        }
 
-                if (pageReviews.length === 0) {
-                    console.log(`ページ${pageNum}: レビューなし、終了`);
-                    break;
-                }
+                        const html = await response.text();
+                        const pageReviews = this.parseReviewPage(html);
 
-                console.log(`ページ${pageNum}: ${pageReviews.length}件のレビューを取得`);
+                        if (pageReviews.length === 0) {
+                            console.log(`ページ${pageNum}: レビューなし、終了`);
+                            foundOldReview = true; // ループを終了させる
+                            success = true;
+                            break;
+                        }
 
-                // 3ヶ月以前のレビューが見つかったかチェック
-                for (const review of pageReviews) {
-                    const reviewDate = new Date(review.review_date);
-                    if (reviewDate < threeMonthsAgo) {
-                        foundOldReview = true;
-                        console.log('3ヶ月以前のレビューを発見、取得終了');
-                        break;
+                        console.log(`ページ${pageNum}: ${pageReviews.length}件のレビューを取得`);
+
+                        // 3ヶ月以前のレビューが見つかったかチェック
+                        for (const review of pageReviews) {
+                            const reviewDate = new Date(review.review_date);
+                            if (reviewDate < threeMonthsAgo) {
+                                foundOldReview = true;
+                                console.log('3ヶ月以前のレビューを発見、取得終了');
+                                break;
+                            }
+                        }
+
+                        allReviews.push(...pageReviews);
+                        pageNum++;
+                        success = true;
+
+                        // レート制限を考慮して少し待機
+                        await this.sleep(500);
+
+                    } catch (fetchError) {
+                        clearTimeout(timeoutId);
+                        
+                        // タイムアウトエラーの場合はリトライ
+                        if ((fetchError.name === 'AbortError' || fetchError.name === 'TimeoutError') && attempt < maxRetries) {
+                            console.warn(`⏱️ タイムアウト、リトライします... (${attempt + 1}/${maxRetries})`);
+                            continue;
+                        }
+                        
+                        // 最後の試行でもエラーが発生した場合
+                        if (attempt >= maxRetries) {
+                            throw fetchError;
+                        }
+                    }
+
+                } catch (error) {
+                    // 最後の試行でもエラーが発生した場合
+                    if (attempt >= maxRetries) {
+                        console.error(`ページ${pageNum}の取得エラー:`, error);
+                        // エラーが発生しても次のページに進む（breakしない）
+                        pageNum++;
+                        break; // リトライループを抜ける
                     }
                 }
+            }
 
-                allReviews.push(...pageReviews);
+            // リトライがすべて失敗した場合、次のページに進むか終了
+            if (!success) {
+                console.warn(`ページ${pageNum}の取得に失敗しました。次のページに進みます。`);
                 pageNum++;
-
-                // レート制限を考慮して少し待機
-                await this.sleep(500);
-
-            } catch (error) {
-                console.error(`ページ${pageNum}の取得エラー:`, error);
-                break;
+                // 連続で失敗した場合は終了
+                if (pageNum > 3 && allReviews.length === 0) {
+                    console.warn('複数ページで取得失敗、処理を終了します');
+                    break;
+                }
             }
         }
 
