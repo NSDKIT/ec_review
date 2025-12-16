@@ -21,23 +21,30 @@ class RakutenReviewAnalyzer {
      */
     async analyzeReviews(itemUrl, itemCode = null) {
         try {
-            // itemCodeが提供されている場合は直接使用
-            let itemId = itemCode;
+            // レビューページURLには ratItemId (shopId_itemId 形式) が必要
+            // itemUrl から ratItemId を抽出する（優先）
+            let itemId = null;
             
-            // itemCodeがない場合のみ、URLから抽出を試みる
-            if (!itemId && itemUrl) {
+            if (itemUrl) {
+                // itemUrl から ratItemId を抽出
                 itemId = await this.extractItemId(itemUrl);
             }
             
-            if (!itemId) {
-                return this.getEmptyResult('商品IDが見つかりませんでした。');
+            // itemUrl から抽出できなかった場合、itemCode から構築を試みる
+            // ただし、itemCode は "rakutenmobile-store:10001518" のような形式のため、
+            // 直接使用できない（shopId が必要）
+            if (!itemId && itemCode) {
+                console.warn('⚠️ itemCode から ratItemId を構築できません。itemUrl が必要です。', itemCode);
+                // itemCode は使用しない（レビューページURLには使えない）
             }
             
-            // itemCodeをレビューページURL用に変換
-            // スラッシュをアンダースコアに置換、コロンもアンダースコアに置換
-            // 例: "10001234/567890" -> "10001234_567890"
-            // 例: "rakutenmobile-store:10001682" -> "rakutenmobile-store_10001682"
-            itemId = itemId.replace(/[\/:]/g, '_');
+            if (!itemId) {
+                return this.getEmptyResult('商品IDが見つかりませんでした。itemUrl が必要です。');
+            }
+            
+            // ratItemId は既に "shopId_itemId" 形式（例: "384677_10001682"）になっているはず
+            // スラッシュが含まれている場合はアンダースコアに置換
+            itemId = itemId.replace(/\//g, '_');
 
             // レビューデータを取得
             const allReviews = await this.fetchAllReviews(itemId);
