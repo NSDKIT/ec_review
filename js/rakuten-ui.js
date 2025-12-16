@@ -504,6 +504,7 @@ class RakutenWorkflowUI {
         const spreadsheetId = document.getElementById('settings-spreadsheet-id').value.trim();
         const googleAppsScriptUrl = document.getElementById('settings-google-apps-script-url').value.trim();
         const rakutenAppId = document.getElementById('settings-rakuten-app-id').value.trim();
+        // GASプロキシURLはVercelの環境変数で管理（設定UIから削除）
 
         // バリデーション
         if (!spreadsheetId) {

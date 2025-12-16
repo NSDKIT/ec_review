@@ -43,9 +43,9 @@ Google Sheetsへの書き込みと、楽天ページの取得（プロキシ）�
 
 ---
 
-### 2. 楽天ページ取得用スクリプト（オプション）
+### 2. 楽天ページ取得用スクリプト（推奨）
 
-レビュー取得機能を使用する場合のみ必要です。
+**商品ID取得機能を使用する場合に必要です。** Vercel Functionsでボット検出される場合、この方法を使用してください。
 
 #### ステップ1: 新しいGoogle Apps Scriptプロジェクトを作成
 
@@ -70,13 +70,14 @@ Google Sheetsへの書き込みと、楽天ページの取得（プロキシ）�
 4. 「デプロイ」をクリック
 5. **WebアプリのURLをコピー**
 
-#### ステップ4: Vercelの環境変数に設定（オプション）
+#### ステップ4: フロントエンドでGAS URLを設定
 
-現在の実装では、Vercel Functionsの `/api/proxy-rakuten` を使用しているため、この設定は不要です。
+1. WebアプリをデプロイしてURLを取得（例: `https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec`）
+2. Webアプリの設定画面（⚙️アイコン）を開く
+3. 「GASプロキシURL」欄にURLを入力
+4. 保存すると、`localStorage` に保存され、以降の商品ID取得で使用されます
 
-もしGoogle Apps Scriptのプロキシを使用したい場合は:
-- **名前**: `GOOGLE_APPS_SCRIPT_PROXY_URL`
-- **値**: コピーしたWebアプリのURL
+**注意**: GAS URLを設定しない場合は、Vercel Functions（`/api/proxy-rakuten`）が使用されます。
 
 ---
 

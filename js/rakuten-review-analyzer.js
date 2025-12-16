@@ -11,6 +11,28 @@ class RakutenReviewAnalyzer {
     constructor() {
         this.chunkSize = 5000; // デフォルトチャンクサイズ
         this.maxPages = 50; // 最大ページ数
+        // Google Apps ScriptのURL（Vercel環境変数から取得）
+        this.gasProxyUrl = null; // 初期化時に取得
+        this.initGasProxyUrl();
+    }
+    
+    /**
+     * Google Apps ScriptのプロキシURLを初期化（Vercel環境変数から取得）
+     */
+    async initGasProxyUrl() {
+        try {
+            const response = await fetch('/api/get-config');
+            if (response.ok) {
+                const config = await response.json();
+                this.gasProxyUrl = config.gasProxyUrl || '';
+                if (this.gasProxyUrl) {
+                    console.log('✅ GASプロキシURLを取得:', this.gasProxyUrl);
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ 設定取得エラー（GASプロキシURL）:', error);
+            this.gasProxyUrl = '';
+        }
     }
 
     /**
@@ -108,8 +130,20 @@ class RakutenReviewAnalyzer {
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                // Vercel FunctionsのプロキシAPIを使用
-                const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(itemUrl)}`;
+                // Google Apps ScriptまたはVercel FunctionsのプロキシAPIを使用
+                let proxyUrl;
+                let useGas = false;
+                
+                if (this.gasProxyUrl) {
+                    // Google Apps Scriptを使用
+                    proxyUrl = `${this.gasProxyUrl}?url=${encodeURIComponent(itemUrl)}&ratItemIdOnly=false`;
+                    useGas = true;
+                    console.log('🔧 Google Apps Scriptを使用して商品ページを取得');
+                } else {
+                    // Vercel Functionsを使用（フォールバック）
+                    proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(itemUrl)}`;
+                    console.log('🔧 Vercel Functionsを使用して商品ページを取得');
+                }
                 
                 if (attempt > 0) {
                     console.log(`🔄 リトライ ${attempt}/${maxRetries}:`, itemUrl);
@@ -160,7 +194,38 @@ class RakutenReviewAnalyzer {
                         return this.extractItemIdFromUrl(itemUrl);
                     }
 
-                    const html = await response.text();
+                    // GASの場合はJSON、Vercel Functionsの場合はHTML
+                    let html;
+                    let extractedRatItemId = null;
+                    
+                    if (useGas) {
+                        // Google Apps Scriptからのレスポンス（JSON形式）
+                        const contentType = response.headers.get('content-type') || '';
+                        if (contentType.includes('application/json')) {
+                            const jsonData = await response.json();
+                            html = jsonData.html || '';
+                            extractedRatItemId = jsonData.ratItemId || null;
+                            
+                            console.log('📄 Google Apps Scriptからのレスポンス:');
+                            console.log('HTML長:', html ? html.length : 0, '文字');
+                            console.log('抽出されたratItemId:', extractedRatItemId);
+                            
+                            if (!html && extractedRatItemId) {
+                                // 商品IDのみが取得できた場合
+                                console.log('✅ 商品ID抽出成功（GAS経由）:', extractedRatItemId);
+                                return extractedRatItemId;
+                            }
+                            
+                            if (!html) {
+                                throw new Error('HTMLが取得できませんでした');
+                            }
+                        } else {
+                            html = await response.text();
+                        }
+                    } else {
+                        // Vercel Functionsからのレスポンス（HTML形式）
+                        html = await response.text();
+                    }
                     
                     // HTMLをログに表示（デバッグ用）
                     console.log('📄 取得された商品ページのHTML:');
@@ -206,6 +271,13 @@ class RakutenReviewAnalyzer {
                     console.log('HTMLにratItemIdが含まれている:', hasRatItemId);
                     console.log('HTMLにitemInfoが含まれている:', hasItemInfo);
                     
+                    // GASで既にratItemIdが抽出されている場合はそれを使用
+                    if (extractedRatItemId) {
+                        console.log('✅ 商品ID抽出成功（GAS経由）:', extractedRatItemId);
+                        return extractedRatItemId;
+                    }
+                    
+                    // HTMLからratItemIdを抽出
                     // 方法1: HTML内のJSONデータから ratItemId を抽出
                     // パターン1: window.__INITIAL_STATE__ 形式
                     let jsonMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/);
