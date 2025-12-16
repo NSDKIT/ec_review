@@ -49,26 +49,38 @@ export default async function handler(req, res) {
     // 楽天のページを取得
     console.log('🌐 楽天ページ取得:', url);
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-        'Referer': 'https://www.rakuten.co.jp/'
-      },
-      // タイムアウト設定（10秒）
-      signal: AbortSignal.timeout(10000)
-    });
+    // タイムアウトを25秒に設定（VercelのmaxDurationが30秒なので余裕を持たせる）
+    const timeoutMs = 25000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (!response.ok) {
-      throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+          'Referer': 'https://www.rakuten.co.jp/'
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
+      }
+
+      const html = await response.text();
+
+      // HTMLを返す
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(html);
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    const html = await response.text();
-
-    // HTMLを返す
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(html);
 
   } catch (error) {
     console.error('❌ エラー:', error);

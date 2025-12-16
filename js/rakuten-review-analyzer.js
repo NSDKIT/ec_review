@@ -72,38 +72,83 @@ class RakutenReviewAnalyzer {
      * Vercel Functions経由で楽天ページを取得
      */
     async extractItemId(itemUrl) {
-        try {
-            // Vercel FunctionsのプロキシAPIを使用
-            const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(itemUrl)}`;
-            
-            console.log('🌐 商品ページ取得:', itemUrl);
-            
-            const response = await fetch(proxyUrl);
-            
-            if (!response.ok) {
-                // フォールバック: URLから直接抽出を試みる
-                console.warn('プロキシAPIエラー、フォールバック使用');
-                return this.extractItemIdFromUrl(itemUrl);
+        const maxRetries = 2;
+        const timeoutMs = 30000; // 30秒
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                // Vercel FunctionsのプロキシAPIを使用
+                const proxyUrl = `/api/proxy-rakuten?url=${encodeURIComponent(itemUrl)}`;
+                
+                if (attempt > 0) {
+                    console.log(`🔄 リトライ ${attempt}/${maxRetries}:`, itemUrl);
+                    // リトライ前に少し待機
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                } else {
+                    console.log('🌐 商品ページ取得:', itemUrl);
+                }
+                
+                // タイムアウト付きfetch
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                
+                try {
+                    const response = await fetch(proxyUrl, {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        // 504エラーの場合はリトライ
+                        if (response.status === 504 && attempt < maxRetries) {
+                            console.warn(`⏱️ タイムアウトエラー (${response.status})、リトライします...`);
+                            continue;
+                        }
+                        
+                        // その他のエラーまたはリトライ上限に達した場合、フォールバック
+                        console.warn('プロキシAPIエラー、フォールバック使用');
+                        return this.extractItemIdFromUrl(itemUrl);
+                    }
+
+                    const html = await response.text();
+                    
+                    // ratItemIdを抽出
+                    const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
+                    
+                    if (match && match[1]) {
+                        const itemId = match[1].replace(/\//g, '_');
+                        console.log('✅ 商品ID抽出成功:', itemId);
+                        return itemId;
+                    }
+
+                    console.warn('商品IDが見つからず、フォールバック使用');
+                    return this.extractItemIdFromUrl(itemUrl);
+
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    
+                    // タイムアウトエラーの場合はリトライ
+                    if ((fetchError.name === 'AbortError' || fetchError.name === 'TimeoutError') && attempt < maxRetries) {
+                        console.warn(`⏱️ タイムアウト、リトライします... (${attempt + 1}/${maxRetries})`);
+                        continue;
+                    }
+                    
+                    throw fetchError;
+                }
+
+            } catch (error) {
+                // 最後の試行でもエラーが発生した場合、フォールバック
+                if (attempt >= maxRetries) {
+                    console.warn('商品ID抽出エラー（フォールバック使用）:', error);
+                    return this.extractItemIdFromUrl(itemUrl);
+                }
             }
-
-            const html = await response.text();
-            
-            // ratItemIdを抽出
-            const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
-            
-            if (match && match[1]) {
-                const itemId = match[1].replace(/\//g, '_');
-                console.log('✅ 商品ID抽出成功:', itemId);
-                return itemId;
-            }
-
-            console.warn('商品IDが見つからず、フォールバック使用');
-            return this.extractItemIdFromUrl(itemUrl);
-
-        } catch (error) {
-            console.warn('商品ID抽出エラー（フォールバック使用）:', error);
-            return this.extractItemIdFromUrl(itemUrl);
         }
+        
+        // すべてのリトライが失敗した場合、フォールバック
+        console.warn('すべてのリトライが失敗、フォールバック使用');
+        return this.extractItemIdFromUrl(itemUrl);
     }
 
     /**
