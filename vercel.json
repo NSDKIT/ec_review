@@ -1,6 +1,7 @@
 {
   "functions": {
     "api/proxy-rakuten.py": {
+      "runtime": "python3.11",
       "maxDuration": 60
     },
     "api/*.js": {
