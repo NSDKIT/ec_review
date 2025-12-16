@@ -80,10 +80,18 @@ export default async function handler(req, res) {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        const errorText = await response.text().catch(() => 'エラーレスポンスの取得に失敗');
+        console.error(`❌ 楽天サーバーエラー (${response.status}):`, errorText.substring(0, 500));
         throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
       }
 
       const html = await response.text();
+      
+      // HTMLが短すぎる場合はエラー
+      if (html.length < 100) {
+        console.error('❌ HTMLが短すぎます:', html);
+        throw new Error(`HTMLが短すぎます (${html.length}文字): ${html.substring(0, 100)}`);
+      }
 
       // HTMLを返す
       res.setHeader('Content-Type', 'text/html; charset=utf-8');

@@ -118,7 +118,25 @@ class RakutenReviewAnalyzer {
                     
                     clearTimeout(timeoutId);
                     
+                    // レスポンスのContent-Typeを確認
+                    const contentType = response.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    
                     if (!response.ok) {
+                        // エラーレスポンスの内容を取得
+                        let errorText;
+                        if (isJson) {
+                            try {
+                                const errorJson = await response.json();
+                                errorText = JSON.stringify(errorJson);
+                            } catch (e) {
+                                errorText = await response.text().catch(() => 'エラーレスポンスの取得に失敗');
+                            }
+                        } else {
+                            errorText = await response.text().catch(() => 'エラーレスポンスの取得に失敗');
+                        }
+                        console.error(`❌ プロキシAPIエラー (${response.status}):`, errorText.substring(0, 500));
+                        
                         // 504エラーの場合はリトライ
                         if (response.status === 504 && attempt < maxRetries) {
                             console.warn(`⏱️ タイムアウトエラー (${response.status})、リトライします...`);
@@ -135,6 +153,20 @@ class RakutenReviewAnalyzer {
                     // HTMLをログに表示（デバッグ用）
                     console.log('📄 取得された商品ページのHTML:');
                     console.log('HTML長:', html.length, '文字');
+                    console.log('レスポンスステータス:', response.status);
+                    
+                    // HTMLが短すぎる場合はエラー
+                    if (html.length < 100) {
+                        console.error('❌ HTMLが短すぎます。エラーページの可能性があります。');
+                        console.error('HTML内容:', html);
+                        
+                        if (attempt < maxRetries) {
+                            console.warn('リトライします...');
+                            continue;
+                        }
+                        return this.extractItemIdFromUrl(itemUrl);
+                    }
+                    
                     console.log('HTML（最初の10000文字）:', html.substring(0, 10000));
                     
                     // 方法1: HTML内のJSONデータから ratItemId を抽出
