@@ -55,8 +55,17 @@ function doGet(e) {
       }
       
       // URLからクエリパラメータを削除（rafcidなどがボット検出を引き起こす可能性がある）
+      // ただし、レビューページのURL（review.rakuten.co.jp）の場合はクエリパラメータを保持
       const scheme = url.startsWith('https://') ? 'https://' : 'http://';
-      cleanUrl = scheme + hostname + pathname;
+      if (hostname.includes('review.rakuten.co.jp')) {
+        // レビューページの場合はクエリパラメータを保持
+        cleanUrl = url; // 元のURLをそのまま使用
+        Logger.log('📄 レビューページURL（クエリパラメータ保持）: ' + cleanUrl);
+      } else {
+        // 商品ページの場合はクエリパラメータを削除
+        cleanUrl = scheme + hostname + pathname;
+        Logger.log('📄 商品ページURL（クエリパラメータ削除）: ' + cleanUrl);
+      }
       
     } catch (urlError) {
       Logger.log('❌ URL解析エラー: ' + urlError.toString());
@@ -114,35 +123,43 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // 商品ID（ratItemId）を抽出
+    // 商品ID（ratItemId）を抽出（レビューページの場合はスキップ）
     let ratItemId = null;
     
-    // 方法1: JSONデータから抽出（window.__INITIAL_STATE__）
-    const jsonMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/);
-    if (jsonMatch) {
-      try {
-        const jsonData = JSON.parse(jsonMatch[1]);
-        if (jsonData.rat && jsonData.rat.genericParameter && jsonData.rat.genericParameter.ratItemId) {
-          ratItemId = jsonData.rat.genericParameter.ratItemId.replace(/\//g, '_');
-        } else if (jsonData.api && jsonData.api.data && jsonData.api.data.itemInfoSku) {
-          const shopId = jsonData.api.data.itemInfoSku.shopId;
-          const itemId = jsonData.api.data.itemInfoSku.itemId;
-          if (shopId && itemId) {
-            ratItemId = shopId + '_' + itemId;
+    // レビューページの場合はratItemIdの抽出をスキップ
+    if (!hostname.includes('review.rakuten.co.jp')) {
+      // 方法1: JSONデータから抽出（window.__INITIAL_STATE__）
+      const jsonMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/);
+      if (jsonMatch) {
+        try {
+          const jsonData = JSON.parse(jsonMatch[1]);
+          if (jsonData.rat && jsonData.rat.genericParameter && jsonData.rat.genericParameter.ratItemId) {
+            ratItemId = jsonData.rat.genericParameter.ratItemId.replace(/\//g, '_');
+            Logger.log('✅ JSONデータからratItemId抽出: ' + ratItemId);
+          } else if (jsonData.api && jsonData.api.data && jsonData.api.data.itemInfoSku) {
+            const shopId = jsonData.api.data.itemInfoSku.shopId;
+            const itemId = jsonData.api.data.itemInfoSku.itemId;
+            if (shopId && itemId) {
+              ratItemId = shopId + '_' + itemId;
+              Logger.log('✅ shopId/itemIdからratItemId抽出: ' + ratItemId);
+            }
           }
+        } catch (e) {
+          // JSON解析エラーは無視
+          Logger.log('⚠️ JSON解析エラー: ' + e.toString());
         }
-      } catch (e) {
-        // JSON解析エラーは無視
       }
-    }
-    
-    // 方法2: 正規表現で抽出
-    if (!ratItemId) {
-      const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
-      if (match && match[1]) {
-        ratItemId = match[1].replace(/\//g, '_');
-        Logger.log('✅ 正規表現でratItemId抽出: ' + ratItemId);
+      
+      // 方法2: 正規表現で抽出
+      if (!ratItemId) {
+        const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
+        if (match && match[1]) {
+          ratItemId = match[1].replace(/\//g, '_');
+          Logger.log('✅ 正規表現でratItemId抽出: ' + ratItemId);
+        }
       }
+    } else {
+      Logger.log('📄 レビューページのため、ratItemIdの抽出をスキップ');
     }
     
     Logger.log('📊 抽出結果:');
