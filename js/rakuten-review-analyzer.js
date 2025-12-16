@@ -125,12 +125,49 @@ class RakutenReviewAnalyzer {
 
                     const html = await response.text();
                     
-                    // ratItemIdを抽出
+                    // HTMLをログに表示（デバッグ用）
+                    console.log('📄 取得された商品ページのHTML:');
+                    console.log('HTML長:', html.length, '文字');
+                    console.log('HTML（最初の10000文字）:', html.substring(0, 10000));
+                    
+                    // 方法1: HTML内のJSONデータから ratItemId を抽出
+                    // パターン1: window.__INITIAL_STATE__ 形式
+                    let jsonMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/);
+                    if (!jsonMatch) {
+                        // パターン2: その他のJSONデータ形式を探す
+                        jsonMatch = html.match(/<script[^>]*>[\s\S]*?({[\s\S]*?"rat"[\s\S]*?})[\s\S]*?<\/script>/);
+                    }
+                    
+                    if (jsonMatch) {
+                        try {
+                            const jsonData = JSON.parse(jsonMatch[1]);
+                            // rat.genericParameter.ratItemId から取得
+                            if (jsonData.rat && jsonData.rat.genericParameter && jsonData.rat.genericParameter.ratItemId) {
+                                const itemId = jsonData.rat.genericParameter.ratItemId.replace(/\//g, '_');
+                                console.log('✅ JSONデータ（rat.genericParameter.ratItemId）から商品ID抽出成功:', itemId);
+                                return itemId;
+                            }
+                            // api.data.itemInfoSku から shopId と itemId を取得して構築
+                            if (jsonData.api && jsonData.api.data && jsonData.api.data.itemInfoSku) {
+                                const shopId = jsonData.api.data.itemInfoSku.shopId;
+                                const itemId = jsonData.api.data.itemInfoSku.itemId;
+                                if (shopId && itemId) {
+                                    const ratItemId = `${shopId}_${itemId}`;
+                                    console.log('✅ JSONデータ（shopId/itemId）から商品ID抽出成功:', ratItemId);
+                                    return ratItemId;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('JSON解析エラー:', e);
+                        }
+                    }
+                    
+                    // 方法2: HTML内の ratItemId を正規表現で抽出（従来の方法）
                     const match = html.match(/ratItemId["']\s*:\s*["']([^"']+)["']/);
                     
                     if (match && match[1]) {
                         const itemId = match[1].replace(/\//g, '_');
-                        console.log('✅ 商品ID抽出成功:', itemId);
+                        console.log('✅ 正規表現で商品ID抽出成功:', itemId);
                         return itemId;
                     }
 
