@@ -5,6 +5,8 @@
  * 注意: 商用利用では、楽天の利用規約を確認してください
  */
 
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
   // CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -93,7 +95,14 @@ export default async function handler(req, res) {
         headers: fetchOptions.headers
       });
 
+      // 実際にHTTPリクエストを送信
+      console.log('🚀 HTTPリクエスト送信開始:', url);
+      const startTime = Date.now();
+      
       const response = await fetch(url, fetchOptions);
+      
+      const endTime = Date.now();
+      console.log(`✅ HTTPリクエスト完了 (${endTime - startTime}ms):`, response.url || url);
 
       clearTimeout(timeoutId);
 
@@ -147,12 +156,24 @@ export default async function handler(req, res) {
 
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      console.error('❌ Fetchエラー:', {
+      console.error('❌ Fetchエラー発生:', {
         name: fetchError.name,
         message: fetchError.message,
         cause: fetchError.cause,
-        stack: fetchError.stack
+        stack: fetchError.stack,
+        url: url
       });
+      
+      // ネットワークエラーの場合
+      if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+        console.error('❌ ネットワークエラー: fetchが実行できませんでした');
+      }
+      
+      // AbortErrorの場合
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ リクエストがタイムアウトしました');
+      }
+      
       throw fetchError;
     }
 
