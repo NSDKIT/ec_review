@@ -4,7 +4,7 @@
   "description": "商品調査・分析ダッシュボード with 楽天商品調査ワークフロー",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step required'",
+    "build": "node build.js",
     "start": "vercel dev"
   },
   "keywords": [
