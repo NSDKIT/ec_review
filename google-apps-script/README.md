@@ -81,6 +81,47 @@ Google Sheetsへの書き込みと、楽天ページの取得（プロキシ）�
 
 ---
 
+### 3. 楽天市場検索スクレイピング用スクリプト（推奨）
+
+**商品検索機能をスクレイピングで使用する場合に必要です。** 楽天APIの代わりに、楽天市場の検索結果ページから直接商品情報を取得します。
+
+#### ステップ1: 新しいGoogle Apps Scriptプロジェクトを作成
+
+1. https://script.google.com にアクセス
+2. 「新しいプロジェクト」をクリック
+3. プロジェクト名を「楽天商品調査 - 検索スクレイピング」に変更
+
+#### ステップ2: コードを実装
+
+1. `RakutenSearchScraper.gs` のコードをコピー
+2. Google Apps Scriptエディタに貼り付け
+3. 「保存」をクリック
+
+#### ステップ3: Webアプリとして公開
+
+1. 「デプロイ」→「新しいデプロイ」をクリック
+2. 種類: 「ウェブアプリ」を選択
+3. 設定:
+   - **説明**: 「楽天商品調査 - 検索スクレイピング」
+   - **実行ユーザー**: 「自分」
+   - **アクセス権限**: 「全員」（匿名ユーザーを含む）⚠️ 重要
+4. 「デプロイ」をクリック
+5. **WebアプリのURLをコピー**（重要！）
+
+#### ステップ4: Vercelの環境変数に設定
+
+1. Vercelダッシュボードにアクセス
+2. プロジェクトの「Settings」→「Environment Variables」
+3. 新しい環境変数を追加:
+   - **名前**: `GOOGLE_APPS_SCRIPT_SEARCH_URL`
+   - **値**: コピーしたWebアプリのURL（例: `https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec`）
+4. 「Save」をクリック
+5. 「Redeploy」をクリック（環境変数を反映）
+
+**注意**: GAS検索URLを設定しない場合は、Vercel Functions（`/api/rakuten-search`）が使用されます。
+
+---
+
 ## 🧪 テスト方法
 
 ### Google Sheets書き込みのテスト
@@ -94,6 +135,13 @@ Google Sheetsへの書き込みと、楽天ページの取得（プロキシ）�
 
 1. Google Apps Scriptエディタで `testProxy()` 関数を実行
 2. ログを確認
+
+### 検索スクレイピングのテスト
+
+1. Google Apps Scriptエディタで `testScraper()` 関数を実行
+2. 「実行」→「testScraper」を選択
+3. ログを確認（「表示」→「ログ」）
+4. 商品情報が正しく抽出されているか確認
 
 ---
 
@@ -177,6 +225,7 @@ const response = await fetch('/api/sheets-write', {
 
 ## ✅ チェックリスト
 
+### Google Sheets書き込み
 - [ ] Google Apps Scriptプロジェクトを作成
 - [ ] `WriteToSheets.gs` のコードを実装
 - [ ] Webアプリとして公開（アクセス権限: 全員）
@@ -185,9 +234,26 @@ const response = await fetch('/api/sheets-write', {
 - [ ] Vercelで再デプロイ
 - [ ] テスト実行で動作確認
 
+### 楽天ページ取得（プロキシ）
+- [ ] Google Apps Scriptプロジェクトを作成
+- [ ] `ProxyRakuten.gs` のコードを実装
+- [ ] Webアプリとして公開（アクセス権限: 全員）
+- [ ] WebアプリのURLをコピー
+- [ ] Vercelの環境変数 `GOOGLE_APPS_SCRIPT_PROXY_URL` に設定（オプション）
+- [ ] テスト実行で動作確認
+
+### 楽天市場検索スクレイピング
+- [ ] Google Apps Scriptプロジェクトを作成
+- [ ] `RakutenSearchScraper.gs` のコードを実装
+- [ ] Webアプリとして公開（アクセス権限: 全員）
+- [ ] WebアプリのURLをコピー
+- [ ] Vercelの環境変数 `GOOGLE_APPS_SCRIPT_SEARCH_URL` に設定
+- [ ] Vercelで再デプロイ
+- [ ] テスト実行で動作確認
+
 ---
 
 ## 🎉 完了！
 
-これで、Google Sheetsへの書き込みが動作するようになります！
+これで、Google Sheetsへの書き込み、楽天ページの取得、楽天市場の検索スクレイピングが動作するようになります！
 
