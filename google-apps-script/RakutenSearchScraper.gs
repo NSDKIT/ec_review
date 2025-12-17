@@ -16,12 +16,14 @@
  * - keyword: 検索キーワード
  * - page: ページ番号（デフォルト: 1）
  * - maxItems: 最大取得数（デフォルト: 30）
+ * - spreadsheetId: スプレッドシートID（指定された場合は書き込みも実行）
  */
 function doGet(e) {
   try {
     const keyword = e.parameter.keyword;
     const page = parseInt(e.parameter.page || '1', 10);
     const maxItems = parseInt(e.parameter.maxItems || '30', 10);
+    const spreadsheetId = e.parameter.spreadsheetId;
     
     // バリデーション
     if (!keyword) {
@@ -38,10 +40,83 @@ function doGet(e) {
     
     Logger.log('✅ スクレイピング完了: ' + products.length + '件');
     
+    // スプレッドシートIDが指定されている場合は書き込みも実行
+    if (spreadsheetId) {
+      Logger.log('📝 Google Spreadsheetに書き込み開始: spreadsheetId=' + spreadsheetId);
+      const writeResult = writeProductsToSheet(spreadsheetId, products);
+      
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        total_products: products.length,
+        products: products,
+        writeResult: writeResult
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // スプレッドシートIDが指定されていない場合は商品情報のみ返す
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       total_products: products.length,
       products: products
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    Logger.log('❌ エラー: ' + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: '予期せぬエラーが発生しました',
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * POSTリクエストの処理（スプレッドシートへの書き込みを含む）
+ * パラメータ:
+ * - keyword: 検索キーワード
+ * - page: ページ番号（デフォルト: 1）
+ * - maxItems: 最大取得数（デフォルト: 30）
+ * - spreadsheetId: スプレッドシートID
+ */
+function doPost(e) {
+  try {
+    const requestData = JSON.parse(e.postData.contents);
+    const keyword = requestData.keyword;
+    const page = parseInt(requestData.page || '1', 10);
+    const maxItems = parseInt(requestData.maxItems || '30', 10);
+    const spreadsheetId = requestData.spreadsheetId;
+    
+    // バリデーション
+    if (!keyword) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: '検索キーワードが必要です'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (!spreadsheetId) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'スプレッドシートIDが必要です'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    Logger.log('🔍 楽天市場スクレイピング開始: keyword=' + keyword + ', page=' + page);
+    
+    // 楽天市場の検索結果ページから商品情報を取得
+    const products = fetchRakutenProducts(keyword, page, maxItems);
+    
+    Logger.log('✅ スクレイピング完了: ' + products.length + '件');
+    
+    // Google Spreadsheetに書き込み
+    Logger.log('📝 Google Spreadsheetに書き込み開始: spreadsheetId=' + spreadsheetId);
+    const writeResult = writeProductsToSheet(spreadsheetId, products);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      total_products: products.length,
+      products: products,
+      writeResult: writeResult
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
@@ -356,6 +431,112 @@ function normalizeUrl(url) {
 }
 
 /**
+ * 商品情報をGoogle Spreadsheetに書き込む
+ * @param {string} spreadsheetId - スプレッドシートID
+ * @param {Array<Object>} products - 商品情報のリスト
+ * @returns {Object} 書き込み結果
+ */
+function writeProductsToSheet(spreadsheetId, products) {
+  try {
+    // スプレッドシートを開く
+    const ss = SpreadsheetApp.openById(spreadsheetId);
+    const sheet = ss.getSheetByName('Sheet1');
+    
+    if (!sheet) {
+      throw new Error('Sheet1が見つかりません');
+    }
+    
+    // 既存のデータをクリア（B2:O300）
+    const clearRange = sheet.getRange('B2:O300');
+    clearRange.clearContent();
+    Logger.log('📝 既存データをクリアしました');
+    
+    // ヘッダーを書き込み
+    const headers = [
+      '検索順位',
+      '商品名',
+      '価格(送料抜)',
+      '価格(送料込)',
+      '商品URL',
+      'サムネURL',
+      'レビュー数',
+      'レビュー平均',
+      'レビュー最新日',
+      '直近3ヶ月のレビュー数',
+      '直近3ヶ月のレビュー平均',
+      '高評価レビュー',
+      '中評価レビュー',
+      '低評価レビュー'
+    ];
+    
+    const headerRange = sheet.getRange('B1:O1');
+    headerRange.setValues([headers]);
+    Logger.log('📝 ヘッダーを書き込みました');
+    
+    // 商品データを書き込み
+    const rowData = [];
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i];
+      
+      // 価格から数値を抽出
+      const priceMatch = product.price.match(/[\d,]+/);
+      const itemPrice = priceMatch ? parseInt(priceMatch[0].replace(/,/g, ''), 10) : 0;
+      
+      // レビュー数を数値に変換
+      const reviewCount = product.review_count
+        ? parseInt(product.review_count.replace(/,/g, ''), 10)
+        : 0;
+      
+      // レビュー平均を数値に変換
+      const reviewAverage = product.review_rating
+        ? parseFloat(product.review_rating)
+        : 0;
+      
+      // 行データを作成
+      const row = [
+        i + 1, // 検索順位
+        product.name, // 商品名
+        itemPrice, // 価格(送料抜)
+        itemPrice, // 価格(送料込) - 送料込み価格は後で更新される可能性がある
+        product.product_url, // 商品URL
+        product.image_url, // サムネURL
+        reviewCount, // レビュー数
+        reviewAverage, // レビュー平均
+        '', // レビュー最新日（後で更新）
+        '', // 直近3ヶ月のレビュー数（後で更新）
+        '', // 直近3ヶ月のレビュー平均（後で更新）
+        '', // 高評価レビュー（後で更新）
+        '', // 中評価レビュー（後で更新）
+        ''  // 低評価レビュー（後で更新）
+      ];
+      
+      rowData.push(row);
+    }
+    
+    // 一括書き込み
+    if (rowData.length > 0) {
+      const dataRange = sheet.getRange(2, 2, rowData.length, 14); // B2から開始、14列
+      dataRange.setValues(rowData);
+      Logger.log('📝 ' + rowData.length + '件の商品データを書き込みました');
+    }
+    
+    return {
+      success: true,
+      message: rowData.length + '件の商品データを書き込みました',
+      totalProducts: rowData.length
+    };
+    
+  } catch (error) {
+    Logger.log('❌ 書き込みエラー: ' + error.toString());
+    return {
+      success: false,
+      error: error.toString(),
+      message: '書き込みに失敗しました'
+    };
+  }
+}
+
+/**
  * テスト用関数（オプション）
  */
 function testScraper() {
@@ -366,6 +547,24 @@ function testScraper() {
     Logger.log('商品' + (i + 1) + ': ' + products[i].name);
     Logger.log('  価格: ' + products[i].price);
     Logger.log('  URL: ' + products[i].product_url);
+  }
+}
+
+/**
+ * テスト用関数（スプレッドシートへの書き込みを含む）
+ */
+function testScraperAndWrite() {
+  const keyword = 'クロックス';
+  const spreadsheetId = '1wdH9PXo6cgzG258Dl_L4JmubYtSYe4V3ZruAim6KAOY'; // テスト用スプレッドシートID
+  
+  Logger.log('🔍 テスト開始: keyword=' + keyword);
+  
+  const products = fetchRakutenProducts(keyword, 1, 10);
+  Logger.log('✅ スクレイピング完了: ' + products.length + '件');
+  
+  if (products.length > 0) {
+    const writeResult = writeProductsToSheet(spreadsheetId, products);
+    Logger.log('📝 書き込み結果: ' + JSON.stringify(writeResult));
   }
 }
 
