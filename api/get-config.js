@@ -20,11 +20,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 環境変数からGASプロキシURLを取得
+    // 環境変数からGAS URLを取得
     const gasProxyUrl = process.env.GOOGLE_APPS_SCRIPT_PROXY_URL || '';
+    const gasSearchUrl = process.env.GOOGLE_APPS_SCRIPT_SEARCH_URL || '';
 
     return res.status(200).json({
-      gasProxyUrl: gasProxyUrl
+      gasProxyUrl: gasProxyUrl,
+      gasSearchUrl: gasSearchUrl
     });
   } catch (error) {
     console.error('❌ エラー:', error);
