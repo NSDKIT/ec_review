@@ -40,6 +40,23 @@ function doGet(e) {
     
     Logger.log('✅ スクレイピング完了: ' + products.length + '件');
     
+    // 商品が見つからない場合の詳細情報を返す
+    if (products.length === 0) {
+      Logger.log('⚠️ 商品が見つかりませんでした。デバッグ情報を返します。');
+      
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        total_products: 0,
+        products: [],
+        debug: {
+          keyword: keyword,
+          page: page,
+          maxItems: maxItems,
+          message: '商品が見つかりませんでした。GASのログ（実行ログ）を確認してください。'
+        }
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // スプレッドシートIDが指定されている場合は書き込みも実行
     if (spreadsheetId) {
       Logger.log('📝 Google Spreadsheetに書き込み開始: spreadsheetId=' + spreadsheetId);
@@ -139,7 +156,13 @@ function doPost(e) {
 function fetchRakutenProducts(keyword, page, maxItems) {
   const url = 'https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(keyword) + '/?p=' + page;
   const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Referer': 'https://www.rakuten.co.jp/',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1'
   };
   
   try {
@@ -159,8 +182,24 @@ function fetchRakutenProducts(keyword, page, maxItems) {
     const html = response.getContentText();
     Logger.log('📄 HTML取得完了: ' + html.length + ' 文字');
     
+    // HTMLが短すぎる場合はボット検出の可能性
+    if (html.length < 1000) {
+      Logger.log('⚠️ HTMLが短すぎます（' + html.length + '文字）。ボット検出の可能性があります。');
+      Logger.log('📄 HTML内容（最初の500文字）: ' + html.substring(0, 500));
+    }
+    
     const products = extractProductInfo(html);
     Logger.log('📦 抽出された商品数: ' + products.length);
+    
+    // 商品が見つからない場合の詳細ログ
+    if (products.length === 0) {
+      Logger.log('⚠️ 商品が見つかりませんでした。');
+      Logger.log('🔍 デバッグ情報:');
+      Logger.log('  - HTML長: ' + html.length + ' 文字');
+      Logger.log('  - HTMLに"tshop.r10s.jp"が含まれる: ' + (html.indexOf('tshop.r10s.jp') !== -1));
+      Logger.log('  - HTMLに"商品"が含まれる: ' + (html.indexOf('商品') !== -1));
+      Logger.log('  - HTMLに"item"が含まれる: ' + (html.indexOf('item') !== -1));
+    }
     
     // 最大取得数まで制限
     return products.slice(0, maxItems);
@@ -183,19 +222,55 @@ function extractProductInfo(htmlContent) {
   
   // 商品画像を基準に商品コンテナを探す
   // 楽天市場の商品画像は通常、tshop.r10s.jpドメインを使用
-  const imagePattern = /<img[^>]*src=["']([^"']*tshop\.r10s\.jp[^"']*\.(jpg|jpeg|png))[^"']*["'][^>]*>/gi;
+  // src属性とdata-src属性の両方をチェック
+  const imagePatterns = [
+    /<img[^>]*src=["']([^"']*tshop\.r10s\.jp[^"']*\.(jpg|jpeg|png))[^"']*["'][^>]*>/gi,
+    /<img[^>]*data-src=["']([^"']*tshop\.r10s\.jp[^"']*\.(jpg|jpeg|png))[^"']*["'][^>]*>/gi
+  ];
+  
   let imageMatch;
   const imageMatches = [];
+  const processedImageUrls = []; // 重複チェック用
   
-  while ((imageMatch = imagePattern.exec(htmlContent)) !== null) {
-    imageMatches.push({
-      src: imageMatch[1],
-      fullTag: imageMatch[0],
-      index: imageMatch.index
-    });
+  for (let p = 0; p < imagePatterns.length; p++) {
+    const pattern = imagePatterns[p];
+    pattern.lastIndex = 0; // 正規表現の状態をリセット
+    
+    while ((imageMatch = pattern.exec(htmlContent)) !== null) {
+      const imgSrc = imageMatch[1];
+      
+      // 重複チェック
+      if (processedImageUrls.indexOf(imgSrc) !== -1) {
+        continue;
+      }
+      processedImageUrls.push(imgSrc);
+      
+      imageMatches.push({
+        src: imgSrc,
+        fullTag: imageMatch[0],
+        index: imageMatch.index
+      });
+    }
   }
   
   Logger.log('🖼️ tshop.r10s.jpの画像数: ' + imageMatches.length);
+  
+  // 画像が見つからない場合のデバッグ情報
+  if (imageMatches.length === 0) {
+    Logger.log('⚠️ 商品画像が見つかりませんでした。');
+    Logger.log('🔍 デバッグ情報:');
+    Logger.log('  - HTMLに"tshop.r10s.jp"が含まれる: ' + (htmlContent.indexOf('tshop.r10s.jp') !== -1));
+    Logger.log('  - HTMLに"img"タグが含まれる: ' + (htmlContent.indexOf('<img') !== -1));
+    
+    // 代替パターン: 商品リンクを探す
+    const itemLinkPattern = /<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>/gi;
+    const itemLinks = [];
+    let linkMatch;
+    while ((linkMatch = itemLinkPattern.exec(htmlContent)) !== null) {
+      itemLinks.push(linkMatch[1]);
+    }
+    Logger.log('  - 商品リンク(/item/)の数: ' + itemLinks.length);
+  }
   
   // 各画像から商品情報を抽出
   for (let i = 0; i < imageMatches.length; i++) {
@@ -453,6 +528,10 @@ function extractProductInfo(htmlContent) {
     if (product.name) {
       products.push(product);
       Logger.log('✅ 商品抽出成功: ' + product.name.substring(0, 50));
+    } else {
+      Logger.log('⚠️ 商品名が取得できませんでした（画像インデックス: ' + i + '）');
+      Logger.log('  - 画像URL: ' + imgSrc.substring(0, 100));
+      Logger.log('  - 画像alt: ' + imgAlt.substring(0, 100));
     }
   }
   
