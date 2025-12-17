@@ -479,8 +479,31 @@ function writeProductsToSheet(spreadsheetId, products) {
       const product = products[i];
       
       // 価格から数値を抽出
-      const priceMatch = product.price.match(/[\d,]+/);
+      const priceMatch = product.price ? product.price.match(/[\d,]+/) : null;
       const itemPrice = priceMatch ? parseInt(priceMatch[0].replace(/,/g, ''), 10) : 0;
+      
+      // 送料価格を抽出
+      let shippingPrice = 0;
+      if (product.shipping_price && product.shipping_price.trim() !== '') {
+        const shippingMatch = product.shipping_price.match(/[\d,]+/);
+        shippingPrice = shippingMatch ? parseInt(shippingMatch[0].replace(/,/g, ''), 10) : 0;
+      }
+      
+      // 送料込み価格を計算
+      // 送料無料の場合は送料抜き価格 = 送料込み価格
+      // 送料有料で送料価格が取得できた場合は、送料抜き価格 + 送料 = 送料込み価格
+      // 送料情報が不明な場合は送料抜き価格 = 送料込み価格
+      let totalPrice = itemPrice;
+      if (product.shipping_info === '送料有料' && shippingPrice > 0) {
+        totalPrice = itemPrice + shippingPrice;
+        Logger.log('💰 送料込み価格計算: ' + itemPrice + ' + ' + shippingPrice + ' = ' + totalPrice);
+      } else if (product.shipping_info === '送料無料') {
+        totalPrice = itemPrice; // 送料無料なので送料抜き = 送料込み
+        Logger.log('💰 送料無料: ' + itemPrice);
+      } else {
+        // shipping_infoが空や不明な場合も、送料抜き = 送料込みとして扱う
+        Logger.log('💰 送料情報不明: ' + itemPrice);
+      }
       
       // レビュー数を数値に変換
       const reviewCount = product.review_count
@@ -492,14 +515,17 @@ function writeProductsToSheet(spreadsheetId, products) {
         ? parseFloat(product.review_rating)
         : 0;
       
+      // 商品URLを取得（product_urlが空の場合は空文字列）
+      const productUrl = product.product_url || '';
+      
       // 行データを作成
       const row = [
         i + 1, // 検索順位
-        product.name, // 商品名
+        product.name || '', // 商品名
         itemPrice, // 価格(送料抜)
-        itemPrice, // 価格(送料込) - 送料込み価格は後で更新される可能性がある
-        product.product_url, // 商品URL
-        product.image_url, // サムネURL
+        totalPrice, // 価格(送料込) - 送料込み価格を計算
+        productUrl, // 商品URL
+        product.image_url || '', // サムネURL
         reviewCount, // レビュー数
         reviewAverage, // レビュー平均
         '', // レビュー最新日（後で更新）
