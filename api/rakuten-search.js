@@ -45,7 +45,9 @@ export default async function handler(req, res) {
       hits: hits.toString(),
       minPrice: minPrice.toString(),
       applicationId: rakuten_appid,
-      postageFlag: '1'
+      postageFlag: '1',
+      availability: '0',
+      field: '0'
     });
 
     if (maxPrice) {
