@@ -122,16 +122,38 @@ class RakutenAPI {
 
             const data = await response.json();
             
+            console.log('📥 GASレスポンス:', JSON.stringify(data, null, 2));
+            
             if (!data.success) {
                 throw new Error(data.error || 'GASスクレイピングエラー');
             }
+
+            // productsが存在しない、または空配列の場合
+            if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
+                console.warn('⚠️ GASから商品が返されませんでした:', data);
+                return {
+                    success: true,
+                    total_products: 0,
+                    products: [],
+                    raw_data: data
+                };
+            }
+
+            console.log('📦 GASから取得した商品数:', data.products.length);
 
             // データを既存のワークフロー形式に変換
             const products = data.products
                 .map((product, index) => {
                     // 価格から数値を抽出
-                    const priceMatch = product.price.match(/[\d,]+/);
+                    const priceMatch = product.price ? product.price.match(/[\d,]+/) : null;
                     const itemPrice = priceMatch ? parseInt(priceMatch[0].replace(/,/g, ''), 10) : 0;
+                    
+                    console.log(`📦 商品${index + 1}:`, {
+                        name: product.name,
+                        price: product.price,
+                        itemPrice: itemPrice,
+                        product_url: product.product_url
+                    });
 
                     // レビュー数を数値に変換
                     const reviewCount = product.review_count
@@ -185,7 +207,13 @@ class RakutenAPI {
                 })
                 .filter(product => product !== null); // nullを除外
 
+            console.log('📊 フィルタリング後の商品数:', products.length, '件');
             console.log('✅ GASスクレイピング成功:', products.length, '件');
+            
+            if (products.length === 0) {
+                console.warn('⚠️ フィルタリングで全ての商品が除外されました');
+                console.log('🔍 フィルタ条件:', { minPrice, maxPrice, NGKeyword });
+            }
 
             return {
                 success: true,
