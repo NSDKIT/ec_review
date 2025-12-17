@@ -47,12 +47,59 @@ class RakutenAPI {
             rakuten_appid = null
         } = params;
 
+        // PythonスクレイパーAPIを優先的に使用
+        const pythonApiUrl = '/api/rakuten-search-scraper';
+        
         // GAS検索URLが設定されている場合はGASを使用
         if (this.gasSearchUrl) {
             return await this.searchItemsViaGAS(keyword, hits, minPrice, maxPrice, NGKeyword);
         }
 
-        // フォールバック: Vercel FunctionsのAPIエンドポイント
+        // PythonスクレイパーAPIを使用（フォールバック）
+        try {
+            console.log('🔍 楽天市場スクレイピング（Python経由）:', { keyword, hits });
+            
+            const url = new URL(pythonApiUrl, window.location.origin);
+            url.searchParams.set('keyword', keyword);
+            url.searchParams.set('page', '1');
+            url.searchParams.set('maxItems', hits.toString());
+            
+            const response = await fetch(url.toString());
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Pythonスクレイピングエラー');
+            }
+            
+            // データを既存のワークフロー形式に変換
+            const products = this.convertScrapedProductsToWorkflowFormat(
+                data.products || [],
+                minPrice,
+                maxPrice,
+                NGKeyword
+            );
+            
+            console.log('✅ Pythonスクレイピング成功:', products.length, '件');
+            
+            return {
+                success: true,
+                total_products: products.length,
+                products: products,
+                raw_data: null
+            };
+            
+        } catch (error) {
+            console.error('❌ Pythonスクレイピングエラー:', error);
+            // フォールバック: 既存のNode.js API
+            console.log('🔄 Node.js APIにフォールバック');
+        }
+
+        // フォールバック: Vercel FunctionsのAPIエンドポイント（Node.js）
         const apiUrl = '/api/rakuten-search';
         
         // 使用するアプリID
@@ -226,6 +273,74 @@ class RakutenAPI {
             console.error('❌ GASスクレイピングエラー:', error);
             throw error;
         }
+    }
+
+    /**
+     * スクレイピング結果をワークフロー形式に変換
+     * @param {Array} scrapedProducts - スクレイピングで取得した商品データ
+     * @param {number} minPrice - 最低価格
+     * @param {number} maxPrice - 最高価格
+     * @param {string} NGKeyword - NGキーワード
+     * @returns {Array} ワークフロー形式の商品データ
+     */
+    convertScrapedProductsToWorkflowFormat(scrapedProducts, minPrice, maxPrice, NGKeyword) {
+        return scrapedProducts
+            .map((product, index) => {
+                // 価格から数値を抽出
+                const priceMatch = product.price ? product.price.match(/[\d,]+/) : null;
+                const itemPrice = priceMatch ? parseInt(priceMatch[0].replace(/,/g, ''), 10) : 0;
+                
+                // レビュー数を数値に変換
+                const reviewCount = product.review_count
+                    ? parseInt(product.review_count.replace(/,/g, ''), 10)
+                    : 0;
+                
+                // レビュー平均を数値に変換
+                const reviewAverage = product.review_rating
+                    ? parseFloat(product.review_rating)
+                    : 0;
+                
+                // 商品URLからitem_codeを抽出（例: /item/123456/ → 123456）
+                const itemCodeMatch = product.product_url.match(/\/item\/([^\/]+)/);
+                const itemCode = itemCodeMatch ? itemCodeMatch[1] : '';
+                
+                // NGKeywordフィルタリング
+                if (NGKeyword && product.name.includes(NGKeyword)) {
+                    return null;
+                }
+                
+                // 価格フィルタリング
+                if (minPrice && itemPrice < minPrice) {
+                    return null;
+                }
+                if (maxPrice && itemPrice > maxPrice) {
+                    return null;
+                }
+                
+                return {
+                    ranking: index + 1,
+                    item_name: product.name,
+                    item_code: itemCode,
+                    item_price: itemPrice,
+                    item_price_with_shipping: itemPrice, // 送料込み価格は後で更新される可能性がある
+                    item_url: product.product_url,
+                    affiliate_url: product.product_url,
+                    medium_image_urls: [product.image_url],
+                    small_image_urls: [product.image_url],
+                    review_count: reviewCount,
+                    review_average: reviewAverage,
+                    shop_name: product.shop_name || 'ショップ名なし',
+                    shop_url: product.shop_name ? `https://www.rakuten.co.jp/${product.shop_name}/` : '',
+                    catch_copy: '',
+                    item_caption: '',
+                    availability: '在庫あり',
+                    postage_flag: product.shipping_info === '送料無料' ? '送料込み' : '送料別',
+                    genre_id: '',
+                    start_time: '',
+                    end_time: ''
+                };
+            })
+            .filter(product => product !== null);
     }
 
     /**

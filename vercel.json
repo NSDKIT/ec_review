@@ -3,6 +3,9 @@
     "api/proxy-rakuten.py": {
       "maxDuration": 60
     },
+    "api/rakuten-search-scraper.py": {
+      "maxDuration": 60
+    },
     "api/*.js": {
       "maxDuration": 30
     }
