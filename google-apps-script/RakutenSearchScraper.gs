@@ -255,21 +255,52 @@ function extractProductInfo(htmlContent) {
   
   Logger.log('🖼️ tshop.r10s.jpの画像数: ' + imageMatches.length);
   
-  // 画像が見つからない場合のデバッグ情報
-  if (imageMatches.length === 0) {
-    Logger.log('⚠️ 商品画像が見つかりませんでした。');
-    Logger.log('🔍 デバッグ情報:');
-    Logger.log('  - HTMLに"tshop.r10s.jp"が含まれる: ' + (htmlContent.indexOf('tshop.r10s.jp') !== -1));
-    Logger.log('  - HTMLに"img"タグが含まれる: ' + (htmlContent.indexOf('<img') !== -1));
-    
-    // 代替パターン: 商品リンクを探す
-    const itemLinkPattern = /<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>/gi;
-    const itemLinks = [];
-    let linkMatch;
-    while ((linkMatch = itemLinkPattern.exec(htmlContent)) !== null) {
-      itemLinks.push(linkMatch[1]);
+  // 商品リンクを基準に商品情報を抽出（画像が見つからない場合の代替方法）
+  const itemLinkPattern = /<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>/gi;
+  const itemLinks = [];
+  let linkMatch;
+  while ((linkMatch = itemLinkPattern.exec(htmlContent)) !== null) {
+    const href = linkMatch[1];
+    // 重複チェック
+    if (itemLinks.indexOf(href) === -1) {
+      itemLinks.push({
+        href: href,
+        index: linkMatch.index,
+        fullTag: linkMatch[0]
+      });
     }
-    Logger.log('  - 商品リンク(/item/)の数: ' + itemLinks.length);
+  }
+  Logger.log('🔗 商品リンク(/item/)の数: ' + itemLinks.length);
+  
+  // 画像が見つからない場合、商品リンクを基準に抽出
+  if (imageMatches.length === 0 && itemLinks.length > 0) {
+    Logger.log('⚠️ 商品画像が見つかりませんでした。商品リンクを基準に抽出を試みます。');
+    
+    // 商品リンクから商品情報を抽出
+    for (let i = 0; i < itemLinks.length; i++) {
+      const linkMatch = itemLinks[i];
+      const searchStart = Math.max(0, linkMatch.index - 10000);
+      const searchEnd = Math.min(htmlContent.length, linkMatch.index + 10000);
+      const containerHtml = htmlContent.substring(searchStart, searchEnd);
+      
+      // 商品リンクの近くにある画像を探す
+      let imageUrl = '';
+      const nearbyImagePattern = /<img[^>]*src=["']([^"']*tshop\.r10s\.jp[^"']*\.(jpg|jpeg|png))[^"']*["'][^>]*>/i;
+      const nearbyImageMatch = containerHtml.match(nearbyImagePattern);
+      if (nearbyImageMatch) {
+        imageUrl = nearbyImageMatch[1];
+      }
+      
+      const product = extractProductFromContainer(containerHtml, linkMatch.href, imageUrl);
+      
+      if (product && product.name) {
+        products.push(product);
+        Logger.log('✅ 商品抽出成功（リンク基準）: ' + product.name.substring(0, 50));
+      }
+    }
+    
+    Logger.log('📊 抽出された商品数（リンク基準）: ' + products.length);
+    return products;
   }
   
   // 各画像から商品情報を抽出
@@ -537,6 +568,219 @@ function extractProductInfo(htmlContent) {
   
   Logger.log('📊 抽出された商品数: ' + products.length);
   return products;
+}
+
+/**
+ * 商品コンテナから商品情報を抽出する（共通関数）
+ * @param {string} containerHtml - 商品コンテナのHTML
+ * @param {string} productUrl - 商品URL（既に取得済みの場合）
+ * @param {string} imageUrl - 画像URL（既に取得済みの場合）
+ * @returns {Object} 商品情報オブジェクト
+ */
+function extractProductFromContainer(containerHtml, productUrl, imageUrl) {
+  const product = {
+    name: '',
+    price: '',
+    image_url: imageUrl || '',
+    image_alt: '',
+    product_url: productUrl || '',
+    review_rating: '',
+    review_count: '',
+    shop_name: '',
+    shipping_info: '',
+    shipping_price: '',
+    point_info: '',
+    additional_info: {}
+  };
+  
+  // 商品名を取得
+  // 優先順位: h2/h3内のaタグ > itemを含むhrefのaタグ > title属性
+  let nameLink = null;
+  
+  // h2/h3内のaタグを探す
+  const h2Match = containerHtml.match(/<h2[^>]*>[\s\S]*?<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>([\s\S]*?)<\/a>[\s\S]*?<\/h2>/i);
+  const h3Match = containerHtml.match(/<h3[^>]*>[\s\S]*?<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>([\s\S]*?)<\/a>[\s\S]*?<\/h3>/i);
+  
+  if (h2Match) {
+    product.name = cleanText(h2Match[2]);
+    if (!product.product_url) {
+      product.product_url = normalizeUrl(h2Match[1]);
+    }
+    nameLink = true;
+  } else if (h3Match) {
+    product.name = cleanText(h3Match[2]);
+    if (!product.product_url) {
+      product.product_url = normalizeUrl(h3Match[1]);
+    }
+    nameLink = true;
+  }
+  
+  // itemを含むhrefのaタグを探す
+  if (!nameLink) {
+    const itemLinkMatch = containerHtml.match(/<a[^>]*href=["']([^"']*\/item\/[^"']*)["'][^>]*>([\s\S]{0,200})<\/a>/i);
+    if (itemLinkMatch) {
+      product.name = cleanText(itemLinkMatch[2]);
+      if (!product.product_url) {
+        product.product_url = normalizeUrl(itemLinkMatch[1]);
+      }
+      nameLink = true;
+    }
+  }
+  
+  // title属性から取得
+  if (!nameLink) {
+    const titleMatch = containerHtml.match(/<a[^>]*title=["']([^"']{0,200})["'][^>]*>/i);
+    if (titleMatch) {
+      product.name = cleanText(titleMatch[1]);
+      nameLink = true;
+    }
+  }
+  
+  // 商品名が取得できなかった場合は、画像のalt属性から取得
+  if (!product.name && product.image_alt) {
+    const altText = product.image_alt;
+    product.name = altText.length > 100 ? altText.substring(0, 100) + '...' : altText;
+  }
+  
+  // 商品名が取得できなかった場合はnullを返す
+  if (!product.name) {
+    return null;
+  }
+  
+  // 価格を取得（既存のロジックを使用）
+  // ... (価格取得ロジックは後で追加)
+  
+  // Pythonコードのロジック: container.get_text()でテキストを取得
+  const containerText = containerHtml.replace(/<[^>]+>/g, ' ');
+  
+  // 価格を取得
+  let foundPrice = false;
+  const priceClassPattern = /<[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+  let priceClassMatch;
+  while ((priceClassMatch = priceClassPattern.exec(containerHtml)) !== null) {
+    const priceElementHtml = priceClassMatch[0];
+    const priceContent = priceClassMatch[1];
+    
+    if (priceElementHtml.indexOf('<h2') !== -1 || 
+        priceElementHtml.indexOf('<h3') !== -1 ||
+        priceElementHtml.indexOf('/item/') !== -1) {
+      continue;
+    }
+    
+    const priceMatch = priceContent.match(/([\d,]+円|¥[\d,]+|[\d,]+円\/本)/);
+    if (priceMatch && priceContent.length < 100) {
+      product.price = priceMatch[1];
+      foundPrice = true;
+      break;
+    }
+  }
+  
+  if (!foundPrice) {
+    const textOnlyHtml = containerHtml
+      .replace(/<h2[^>]*>[\s\S]*?<\/h2>/gi, '')
+      .replace(/<h3[^>]*>[\s\S]*?<\/h3>/gi, '')
+      .replace(/<a[^>]*href=["'][^"']*\/item\/[^"']*["'][^>]*>[\s\S]*?<\/a>/gi, '');
+    const textOnly = textOnlyHtml.replace(/<[^>]+>/g, ' ');
+    const pricePattern = /([\d,]+円|¥[\d,]+|[\d,]+円\/本)/g;
+    let priceTextMatch;
+    
+    while ((priceTextMatch = pricePattern.exec(textOnly)) !== null) {
+      const priceText = priceTextMatch[1];
+      const contextStart = Math.max(0, priceTextMatch.index - 20);
+      const contextEnd = Math.min(textOnly.length, priceTextMatch.index + priceText.length + 20);
+      const context = textOnly.substring(contextStart, contextEnd);
+      
+      if (context.length < 100) {
+        product.price = priceText;
+        foundPrice = true;
+        break;
+      }
+    }
+  }
+  
+  // レビュー情報を取得
+  const reviewTextPattern = /(\d+\.\d+)\(([\d,]+)件\)/g;
+  let reviewTextMatch;
+  while ((reviewTextMatch = reviewTextPattern.exec(containerText)) !== null) {
+    product.review_rating = reviewTextMatch[1];
+    product.review_count = reviewTextMatch[2];
+    break;
+  }
+  
+  // ショップ名を画像URLから抽出
+  if (product.image_url) {
+    const shopMatch = product.image_url.match(/tshop\.r10s\.jp\/([^\/]+)\//);
+    if (shopMatch) {
+      product.shop_name = shopMatch[1];
+    }
+  }
+  
+  // ショップリンクからも取得を試みる
+  if (!product.shop_name) {
+    const shopLinkMatch = containerHtml.match(/<a[^>]*href=["'][^"']*\/shop\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/i);
+    if (shopLinkMatch) {
+      product.shop_name = cleanText(shopLinkMatch[1]);
+    }
+  }
+  
+  // 送料情報を取得
+  const shippingPricePatterns = [
+    /送料\s*([\d,]+円)/,
+    /送料\s*\+?\s*([\d,]+円)/,
+    /送料[：:]\s*([\d,]+円)/,
+    /\+送料\s*([\d,]+円)/
+  ];
+  
+  let foundShippingPrice = false;
+  for (let p = 0; p < shippingPricePatterns.length; p++) {
+    const pattern = shippingPricePatterns[p];
+    let match;
+    
+    while ((match = pattern.exec(containerText)) !== null) {
+      const fullText = match[0];
+      const price = match[1] || '';
+      
+      if (fullText.length < 50 && 
+          fullText.indexOf('送料') !== -1 && 
+          fullText.indexOf('円') !== -1 &&
+          fullText.indexOf('送料無料') === -1 &&
+          price) {
+        product.shipping_price = price;
+        product.shipping_info = '送料有料';
+        foundShippingPrice = true;
+        break;
+      }
+    }
+    
+    if (foundShippingPrice) {
+      break;
+    }
+  }
+  
+  if (!foundShippingPrice) {
+    const shippingTextPattern = /送料(無料|有料)/g;
+    let shippingMatch;
+    while ((shippingMatch = shippingTextPattern.exec(containerText)) !== null) {
+      const shippingText = shippingMatch[0].trim();
+      if (shippingText.length < 50 && /^送料(無料|有料)/.test(shippingText)) {
+        product.shipping_info = shippingText;
+        break;
+      }
+    }
+  }
+  
+  // ポイント情報を取得
+  const pointPattern = /(ポイント|pt|PT)[^\s]{0,30}/gi;
+  let pointMatch;
+  while ((pointMatch = pointPattern.exec(containerText)) !== null) {
+    const pointText = pointMatch[0].trim();
+    if (pointText.length < 50) {
+      product.point_info = pointText;
+      break;
+    }
+  }
+  
+  return product;
 }
 
 /**
