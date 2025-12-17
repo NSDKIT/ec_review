@@ -47,7 +47,8 @@ export default async function handler(req, res) {
       applicationId: rakuten_appid,
       postageFlag: '1',
       availability: '0',
-      field: '0'
+      field: '0',
+      sort: 'standard'
     });
 
     if (maxPrice) {
