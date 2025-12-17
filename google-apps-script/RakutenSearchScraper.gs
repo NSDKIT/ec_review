@@ -278,37 +278,75 @@ function extractProductInfo(htmlContent) {
     }
     
     // 価格を取得
-    // 価格パターン: 数値+円 または ¥+数値 の形式
-    const pricePatterns = [
-      /([\d,]+円)/g,
-      /(¥[\d,]+)/g,
-      /([\d,]+円\/本)/g
-    ];
-    
+    // まず、価格専用のクラスを持つ要素を探す（商品名要素は除外）
+    // Pythonコードのロジック: price_elements = container.find_all(class_=re.compile(r'price', re.I))
     let foundPrice = false;
-    for (let p = 0; p < pricePatterns.length; p++) {
-      const pattern = pricePatterns[p];
-      const matches = containerHtml.match(pattern);
-      if (matches) {
-        for (let m = 0; m < matches.length; m++) {
-          const priceText = matches[m];
-          // 商品名のような長いテキストは除外
-          if (priceText.length < 100) {
-            product.price = priceText;
-            foundPrice = true;
-            break;
-          }
+    
+    // 価格クラスを持つ要素を探す
+    const priceClassPattern = /<[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/gi;
+    let priceClassMatch;
+    while ((priceClassMatch = priceClassPattern.exec(containerHtml)) !== null) {
+      const priceElementHtml = priceClassMatch[0];
+      const priceContent = priceClassMatch[1];
+      
+      // 商品名を含む要素は除外（h2, h3, 商品リンクを含む要素）
+      if (priceElementHtml.indexOf('<h2') !== -1 || 
+          priceElementHtml.indexOf('<h3') !== -1 ||
+          priceElementHtml.indexOf('/item/') !== -1) {
+        continue;
+      }
+      
+      // 価格パターンを探す
+      const priceMatch = priceContent.match(/([\d,]+円|¥[\d,]+|[\d,]+円\/本)/);
+      if (priceMatch && priceContent.length < 100) {
+        product.price = priceMatch[1];
+        foundPrice = true;
+        break;
+      }
+    }
+    
+    // 価格要素が見つからない場合、テキストノードから価格パターンを探す
+    if (!foundPrice) {
+      // HTMLタグを除去したテキストを取得（商品名要素を除外）
+      // h2, h3, 商品リンクを含む要素を除外
+      const textOnlyHtml = containerHtml
+        .replace(/<h2[^>]*>[\s\S]*?<\/h2>/gi, '')
+        .replace(/<h3[^>]*>[\s\S]*?<\/h3>/gi, '')
+        .replace(/<a[^>]*href=["'][^"']*\/item\/[^"']*["'][^>]*>[\s\S]*?<\/a>/gi, '');
+      
+      // HTMLタグを除去
+      const textOnly = textOnlyHtml.replace(/<[^>]+>/g, ' ');
+      
+      // 価格パターン: 数値+円（カンマ区切り可）、短いテキストのみ
+      const pricePattern = /([\d,]+円|¥[\d,]+|[\d,]+円\/本)/g;
+      let priceTextMatch;
+      
+      while ((priceTextMatch = pricePattern.exec(textOnly)) !== null) {
+        const priceText = priceTextMatch[1];
+        const contextStart = Math.max(0, priceTextMatch.index - 20);
+        const contextEnd = Math.min(textOnly.length, priceTextMatch.index + priceText.length + 20);
+        const context = textOnly.substring(contextStart, contextEnd);
+        
+        // 商品名のような長いテキストは除外
+        if (context.length < 100) {
+          product.price = priceText;
+          foundPrice = true;
+          break;
         }
-        if (foundPrice) break;
       }
     }
     
     // レビュー情報を取得
+    // Pythonコードのロジック: container.find_all(string=re.compile(r'\d+\.\d+\([\d,]+件\)'))
     // パターン: "4.49(5,695件)" のような形式
-    const reviewMatch = containerHtml.match(/(\d+\.\d+)\(([\d,]+)件\)/);
-    if (reviewMatch) {
-      product.review_rating = reviewMatch[1];
-      product.review_count = reviewMatch[2];
+    // HTMLタグを除去したテキストから探す
+    const reviewTextPattern = /(\d+\.\d+)\(([\d,]+)件\)/g;
+    let reviewTextMatch;
+    
+    while ((reviewTextMatch = reviewTextPattern.exec(containerText)) !== null) {
+      product.review_rating = reviewTextMatch[1];
+      product.review_count = reviewTextMatch[2];
+      break; // 最初のマッチを使用
     }
     
     // レビューリンクからも取得を試みる
@@ -338,7 +376,13 @@ function extractProductInfo(htmlContent) {
       }
     }
     
+    // Pythonコードのロジック: container.get_text()でテキストを取得
+    // HTMLタグを除去したテキストを取得（レビュー情報、送料情報、ポイント情報で使用）
+    const containerText = containerHtml.replace(/<[^>]+>/g, ' ');
+    
     // 送料情報を取得
+    
+    // まず、送料の金額を探す（例: 送料550円）
     const shippingPricePatterns = [
       /送料\s*([\d,]+円)/,
       /送料\s*\+?\s*([\d,]+円)/,
@@ -348,11 +392,16 @@ function extractProductInfo(htmlContent) {
     
     let foundShippingPrice = false;
     for (let p = 0; p < shippingPricePatterns.length; p++) {
-      const match = containerHtml.match(shippingPricePatterns[p]);
-      if (match) {
+      const pattern = shippingPricePatterns[p];
+      let match;
+      
+      // Pythonコードのロジック: re.finditerで複数のマッチを処理
+      while ((match = pattern.exec(containerText)) !== null) {
         const fullText = match[0];
         const price = match[1] || '';
         
+        // 商品名のような長いテキストは除外
+        // 「送料無料」も除外
         if (fullText.length < 50 && 
             fullText.indexOf('送料') !== -1 && 
             fullText.indexOf('円') !== -1 &&
@@ -364,20 +413,40 @@ function extractProductInfo(htmlContent) {
           break;
         }
       }
+      
+      if (foundShippingPrice) {
+        break;
+      }
     }
     
     // 送料金額が見つからなかった場合、送料無料/有料の判定のみ
     if (!foundShippingPrice) {
-      const shippingMatch = containerHtml.match(/送料(無料|有料)/);
-      if (shippingMatch && shippingMatch[0].length < 50) {
-        product.shipping_info = shippingMatch[0];
+      // Pythonコードのロジック: container.find_all(string=re.compile(r'送料無料|送料有料'))
+      const shippingTextPattern = /送料(無料|有料)/g;
+      let shippingMatch;
+      
+      while ((shippingMatch = shippingTextPattern.exec(containerText)) !== null) {
+        const shippingText = shippingMatch[0].trim();
+        // 短いテキストのみを送料情報として使用
+        if (shippingText.length < 50 && /^送料(無料|有料)/.test(shippingText)) {
+          product.shipping_info = shippingText;
+          break;
+        }
       }
     }
     
     // ポイント情報を取得
-    const pointMatch = containerHtml.match(/(ポイント|pt|PT)[^\s]{0,30}/i);
-    if (pointMatch && pointMatch[0].length < 50) {
-      product.point_info = pointMatch[0];
+    // Pythonコードのロジック: container.find_all(string=re.compile(r'ポイント|pt|PT'))
+    // HTMLタグを除去したテキストから探す
+    const pointPattern = /(ポイント|pt|PT)[^\s]{0,30}/gi;
+    let pointMatch;
+    
+    while ((pointMatch = pointPattern.exec(containerText)) !== null) {
+      const pointText = pointMatch[0].trim();
+      if (pointText.length < 50) {
+        product.point_info = pointText;
+        break;
+      }
     }
     
     // 商品名が取得できた場合のみリストに追加
