@@ -15,12 +15,19 @@ function extractProductInfo(htmlContent) {
   const products = [];
   const processedContainers = new Set();
 
+  console.log('📄 HTML解析開始。HTML長:', htmlContent.length, '文字');
+
   // 方法1: 商品画像を基準に商品コンテナを探す
   // 楽天市場の商品画像は通常、tshop.r10s.jpドメインを使用
-  const productImages = $('img[src*="tshop.r10s.jp"]').filter((i, img) => {
+  const allImages = $('img[src*="tshop.r10s.jp"]');
+  console.log('🖼️ tshop.r10s.jpの画像数:', allImages.length);
+  
+  const productImages = allImages.filter((i, img) => {
     const src = $(img).attr('src') || '';
     return /\.(jpg|jpeg|png)$/i.test(src);
   });
+  
+  console.log('🖼️ 商品画像候補数:', productImages.length);
 
   productImages.each((i, img) => {
     const $img = $(img);
@@ -240,9 +247,13 @@ function extractProductInfo(htmlContent) {
     // 商品名が取得できた場合のみリストに追加
     if (product.name) {
       products.push(product);
+      console.log('✅ 商品抽出成功:', product.name.substring(0, 50));
+    } else {
+      console.log('⚠️ 商品名が取得できませんでした');
     }
   });
 
+  console.log('📊 抽出された商品数:', products.length);
   return products;
 }
 
@@ -260,19 +271,26 @@ async function fetchRakutenProducts(keyword, page = 1, maxItems = 30) {
   };
 
   try {
+    console.log('🌐 楽天市場ページ取得開始:', url);
     const response = await fetch(url, { headers });
+    
+    console.log('📥 レスポンス受信:', response.status, response.statusText);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const html = await response.text();
+    console.log('📄 HTML取得完了:', html.length, '文字');
+    console.log('📄 HTML（最初の500文字）:', html.substring(0, 500));
+    
     const products = extractProductInfo(html);
+    console.log('📦 抽出された商品数:', products.length);
 
     // 最大取得数まで制限
     return products.slice(0, maxItems);
   } catch (error) {
-    console.error('エラーが発生しました:', error);
+    console.error('❌ エラーが発生しました:', error);
     return [];
   }
 }
@@ -312,7 +330,10 @@ export default async function handler(req, res) {
     // 楽天市場の検索結果ページから商品情報を取得
     const scrapedProducts = await fetchRakutenProducts(keyword, 1, hits);
 
+    console.log('📊 スクレイピング結果:', scrapedProducts.length, '件');
+
     if (scrapedProducts.length === 0) {
+      console.log('⚠️ 商品が見つかりませんでした');
       return res.status(200).json({
         success: true,
         total_products: 0,
